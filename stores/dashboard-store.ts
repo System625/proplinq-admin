@@ -9,6 +9,7 @@ interface DashboardState {
   error: string | null;
   fetchStats: () => Promise<void>;
   refreshStats: () => Promise<void>;
+  setStats: (stats: DashboardStats) => void;
 }
 
 export const useDashboardStore = create<DashboardState>((set, get) => ({
@@ -20,23 +21,30 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
+      console.log('Fetching dashboard stats...'); // Debug log
       const stats = await apiService.getDashboardStats();
+      console.log('Dashboard stats received:', stats); // Debug log
       set({ 
         stats, 
         isLoading: false 
       });
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Failed to fetch dashboard stats';
+      console.error('Dashboard stats fetch error:', error); // Debug log
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch dashboard stats';
       set({ 
         error: errorMessage,
         isLoading: false 
       });
-      toast.error(errorMessage);
+      toast.error(`Dashboard Error: ${errorMessage}`);
     }
   },
 
   refreshStats: async () => {
     await get().fetchStats();
     toast.success('Dashboard stats refreshed');
+  },
+
+  setStats: (stats: DashboardStats) => {
+    set({ stats, isLoading: false, error: null });
   },
 }));

@@ -1,151 +1,261 @@
-import axios from 'axios';
-import { MockApiService } from './mock-api';
-import { LoginCredentials, LoginResponse, DashboardStats, User, Booking, Transaction, KycVerification, RefundRequest, KycReview, PaginatedResponse } from '@/types/api';
+import { LoginCredentials, ApiLoginResponse, DashboardStats, ApiUser, Booking, Transaction, KycVerification, RefundRequest, KycReview, PaginatedResponse } from '@/types/api';
 
-const API_BASE_URL = 'http://localhost:8000/api/v1';
-
-export const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('proplinq_admin_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('proplinq_admin_token');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);
-
-// API service with fallback to mock data
+// Production API service
 export const apiService = {
   // Authentication
-  async login(credentials: LoginCredentials): Promise<LoginResponse> {
-    try {
-      const response = await api.post('/auth/login', credentials);
-      return response.data;
-    } catch {
-      // Fallback to mock API if real API is unavailable
-      console.warn('Using mock API for login');
-      return await MockApiService.login(credentials);
+  async login(credentials: LoginCredentials): Promise<ApiLoginResponse> {
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(credentials),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Login failed');
     }
+
+    return data;
   },
 
   // Dashboard
   async getDashboardStats(): Promise<DashboardStats> {
-    try {
-      const response = await api.get('/admin/dashboard/stats');
-      return response.data;
-    } catch {
-      console.warn('Using mock API for dashboard stats');
-      return await MockApiService.getDashboardStats();
+    console.log('🔄 API Service: Fetching dashboard stats');
+    const token = typeof window !== 'undefined' ? localStorage.getItem('proplinq_admin_token') : null;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
+
+    const response = await fetch('/api/dashboard/stats', {
+      headers,
+    });
+    
+    console.log('📡 API Service: Dashboard stats response status:', response.status);
+    
+    if (!response.ok) {
+      console.error('❌ API Service: Dashboard stats failed with status:', response.status);
+      throw new Error('Failed to fetch dashboard stats');
+    }
+    
+    const data = await response.json();
+    console.log('📊 API Service: Dashboard stats data:', data);
+    return data.data;
   },
 
   // Users
-  async getUsers(params?: Record<string, unknown>): Promise<PaginatedResponse<User>> {
-    try {
-      const response = await api.get('/admin/users', { params });
-      return response.data;
-    } catch {
-      console.warn('Using mock API for users');
-      return await MockApiService.getUsers(params);
+  async getUsers(params?: Record<string, unknown>): Promise<PaginatedResponse<ApiUser>> {
+    console.log('🔄 API Service: Fetching users with params:', params);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('proplinq_admin_token') : null;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
+
+    const queryString = params ? new URLSearchParams(params as Record<string, string>).toString() : '';
+    const url = queryString ? `/api/users?${queryString}` : '/api/users';
+    console.log('🌐 API Service: Users URL:', url);
+
+    const response = await fetch(url, { headers });
+    console.log('📡 API Service: Users response status:', response.status);
+    
+    if (!response.ok) {
+      console.error('❌ API Service: Users failed with status:', response.status);
+      throw new Error('Failed to fetch users');
+    }
+    
+    const data = await response.json();
+    console.log('📊 API Service: Users data:', data);
+    return data;
   },
 
-  async getUser(id: string): Promise<User> {
-    try {
-      const response = await api.get(`/admin/users/${id}`);
-      return response.data;
-    } catch {
-      console.warn('Using mock API for user details');
-      return await MockApiService.getUser(id);
+  async getUser(id: string): Promise<ApiUser> {
+    console.log('🔄 API Service: Fetching user with ID:', id);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('proplinq_admin_token') : null;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
+
+    const response = await fetch(`/api/users/${id}`, { headers });
+    console.log('📡 API Service: User response status:', response.status);
+    
+    if (!response.ok) {
+      console.error('❌ API Service: User failed with status:', response.status);
+      throw new Error('Failed to fetch user');
+    }
+    
+    const data = await response.json();
+    console.log('📊 API Service: User data:', data);
+    return data;
   },
 
   // Bookings
   async getBookings(params?: Record<string, unknown>): Promise<PaginatedResponse<Booking>> {
-    try {
-      const response = await api.get('/admin/bookings', { params });
-      return response.data;
-    } catch {
-      console.warn('Using mock API for bookings');
-      return await MockApiService.getBookings(params);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('proplinq_admin_token') : null;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
+
+    const queryString = params ? new URLSearchParams(params as Record<string, string>).toString() : '';
+    const url = queryString ? `/api/bookings?${queryString}` : '/api/bookings';
+
+    const response = await fetch(url, { headers });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch bookings');
+    }
+    
+    return await response.json();
   },
 
   async updateBooking(id: string, data: Partial<Booking>): Promise<Booking> {
-    try {
-      const response = await api.put(`/admin/bookings/${id}`, data);
-      return response.data;
-    } catch {
-      console.warn('Using mock API for booking update');
-      return await MockApiService.updateBooking(id, data);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('proplinq_admin_token') : null;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
+
+    const response = await fetch(`/api/bookings/${id}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(data),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to update booking');
+    }
+    
+    return await response.json();
   },
 
   // Transactions
   async getTransactions(params?: Record<string, unknown>): Promise<PaginatedResponse<Transaction>> {
-    try {
-      const response = await api.get('/admin/transactions', { params });
-      return response.data;
-    } catch {
-      console.warn('Using mock API for transactions');
-      return await MockApiService.getTransactions(params);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('proplinq_admin_token') : null;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
+
+    const queryString = params ? new URLSearchParams(params as Record<string, string>).toString() : '';
+    const url = queryString ? `/api/transactions?${queryString}` : '/api/transactions';
+
+    const response = await fetch(url, { headers });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch transactions');
+    }
+    
+    return await response.json();
   },
 
   async processRefund(data: RefundRequest): Promise<Transaction> {
-    try {
-      const response = await api.post('/admin/refunds', data);
-      return response.data;
-    } catch {
-      console.warn('Using mock API for refund processing');
-      return await MockApiService.processRefund(data);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('proplinq_admin_token') : null;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
+
+    const response = await fetch('/api/refunds', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to process refund');
+    }
+    
+    return await response.json();
   },
 
   // KYC
   async getKycVerifications(params?: Record<string, unknown>): Promise<PaginatedResponse<KycVerification>> {
-    try {
-      const response = await api.get('/admin/kyc', { params });
-      return response.data;
-    } catch {
-      console.warn('Using mock API for KYC verifications');
-      return await MockApiService.getKycVerifications(params);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('proplinq_admin_token') : null;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
+
+    const queryString = params ? new URLSearchParams(params as Record<string, string>).toString() : '';
+    const url = queryString ? `/api/kyc?${queryString}` : '/api/kyc';
+
+    const response = await fetch(url, { headers });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch KYC verifications');
+    }
+    
+    return await response.json();
   },
 
   async getKycVerification(id: string): Promise<KycVerification> {
-    try {
-      const response = await api.get(`/admin/kyc/${id}`);
-      return response.data;
-    } catch {
-      console.warn('Using mock API for KYC details');
-      return await MockApiService.getKycVerification(id);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('proplinq_admin_token') : null;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
+
+    const response = await fetch(`/api/kyc/${id}`, { headers });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch KYC verification');
+    }
+    
+    return await response.json();
   },
 
   async reviewKycVerification(id: string, data: KycReview): Promise<KycVerification> {
-    try {
-      const response = await api.post(`/admin/kyc/${id}/verify`, data);
-      return response.data;
-    } catch {
-      console.warn('Using mock API for KYC review');
-      return await MockApiService.reviewKycVerification(id, data);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('proplinq_admin_token') : null;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
+
+    const response = await fetch(`/api/kyc/${id}/verify`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to review KYC verification');
+    }
+    
+    return await response.json();
   },
 };

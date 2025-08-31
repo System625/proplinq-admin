@@ -10,6 +10,27 @@ export interface User {
   updatedAt: string;
 }
 
+// Real API user structure
+export interface ApiUser {
+  id: number;
+  full_name: string;
+  email: string;
+  email_verified_at: string | null;
+  role: string;
+  phone_number: string;
+  phone_verified_at: string | null;
+  location: string;
+  terms_accepted: boolean;
+  is_suspended: boolean;
+  created_at: string;
+  updated_at: string;
+  agency_name: string;
+  agent_type: string;
+  whatsapp_number: string;
+  google_id: string | null;
+  apple_id: string | null;
+}
+
 export interface LoginCredentials {
   email: string;
   password: string;
@@ -20,19 +41,42 @@ export interface LoginResponse {
   user: User;
 }
 
+// Real API login response structure
+export interface ApiLoginResponse {
+  status: boolean;
+  message: string;
+  data: {
+    user: ApiUser;
+    token: string;
+  };
+}
+
 export interface DashboardStats {
-  totalUsers: number;
-  totalBookings: number;
-  totalRevenue: number;
-  pendingKyc: number;
-  monthlyRevenue: Array<{
-    month: string;
-    revenue: number;
-  }>;
-  userGrowth: Array<{
-    month: string;
-    users: number;
-  }>;
+  users: {
+    total: number;
+    new_this_month: number;
+    by_role: {
+      admin: number;
+      agent: number;
+      home_seeker: number;
+    };
+  };
+  properties: {
+    total: number;
+    available: number;
+    rented: number;
+    sold: number;
+  };
+  kyc: {
+    pending: number;
+    approved: number;
+    rejected: number;
+  };
+  rnpl: {
+    active_loans: number;
+    pending_applications: number;
+    total_value: number;
+  };
 }
 
 export interface Booking {
@@ -59,15 +103,25 @@ export interface Transaction {
 }
 
 export interface KycVerification {
-  id: string;
-  userId: string;
-  documentType: 'passport' | 'driver_license' | 'national_id';
-  documentUrl: string;
+  id: number;
+  user_id: number;
+  bvn: string;
+  nin: string;
+  employment_status: string;
+  occupation: string;
+  company_name: string;
+  business_name?: string;
+  tin?: string;
   status: 'pending' | 'approved' | 'rejected';
-  reviewedBy?: string;
-  reviewedAt?: string;
-  rejectionReason?: string;
-  submittedAt: string;
+  rejection_reason?: string;
+  reviewed_by?: string;
+  reviewed_at?: string;
+  created_at: string;
+  updated_at: string;
+  user: ApiUser;
+  utility_bill_full_url: string;
+  bank_statement_full_url: string;
+  cac_document_full_url: string;
 }
 
 export interface RefundRequest {
@@ -96,6 +150,41 @@ export interface PaginatedResponse<T> {
     total: number;
     totalPages: number;
   };
+}
+
+export interface CompanyData {
+  id: number;
+  full_name: string;
+  email: string;
+  phone_number?: string;
+  company_name: string;
+  property_type: string;
+  location: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CompanyDataResponse<T> {
+  status: boolean;
+  message: string;
+  data: T;
+  errors?: any;
+}
+
+export interface CompanyDataPaginatedResponse<T> {
+  current_page: number;
+  data: T[];
+  first_page_url: string;
+  from: number;
+  last_page: number;
+  last_page_url: string;
+  links: { url: string | null; label: string; active: boolean }[];
+  next_page_url: string | null;
+  path: string;
+  per_page: number;
+  prev_page_url: string | null;
+  to: number;
+  total: number;
 }
 
 export interface ApiError {

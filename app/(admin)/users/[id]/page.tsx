@@ -31,6 +31,34 @@ export default function UserDetailPage() {
     });
   };
 
+  const formatRole = (role: string) => {
+    const roleMap: Record<string, string> = {
+      'admin': 'Administrator',
+      'agent': 'Real Estate Agent',
+      'home_seeker': 'Home Seeker',
+      'property_owner': 'Property Owner',
+      'individual_agent': 'Individual Agent',
+      'agency_agent': 'Agency Agent',
+    };
+    return roleMap[role] || role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  const getRoleVariant = (role: string): "red" | "blue" | "green" | "purple" | "indigo" | "cyan" | "gray" => {
+    const variants = {
+      'admin': 'red' as const,
+      'agent': 'blue' as const,
+      'home_seeker': 'green' as const,
+      'property_owner': 'purple' as const,
+      'individual_agent': 'indigo' as const,
+      'agency_agent': 'cyan' as const,
+    };
+    return variants[role as keyof typeof variants] || 'gray';
+  };
+
+  const getStatusVariant = (verified: boolean): "green" | "orange" => {
+    return verified ? 'green' : 'orange';
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -78,7 +106,7 @@ export default function UserDetailPage() {
         </Button>
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-            {currentUser.firstName} {currentUser.lastName}
+            {currentUser.full_name}
           </h1>
           <p className="text-muted-foreground">User Details</p>
         </div>
@@ -103,17 +131,58 @@ export default function UserDetailPage() {
             </div>
 
             <div className="flex items-center space-x-3">
+              <div>
+                <p className="text-sm font-medium">Phone Number</p>
+                <p className="text-sm text-muted-foreground">{currentUser.phone_number || 'Not provided'}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <div>
+                <p className="text-sm font-medium">Location</p>
+                <p className="text-sm text-muted-foreground">{currentUser.location || 'Not provided'}</p>
+              </div>
+            </div>
+
+            {currentUser.agency_name && (
+              <div className="flex items-center space-x-3">
+                <div>
+                  <p className="text-sm font-medium">Agency Name</p>
+                  <p className="text-sm text-muted-foreground">{currentUser.agency_name}</p>
+                </div>
+              </div>
+            )}
+
+            {currentUser.agent_type && (
+              <div className="flex items-center space-x-3">
+                <div>
+                  <p className="text-sm font-medium">Agent Type</p>
+                  <Badge variant="secondary">{formatRole(currentUser.agent_type)}</Badge>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center space-x-3">
               <Shield className="h-4 w-4 text-muted-foreground" />
               <div>
                 <p className="text-sm font-medium">Role</p>
-                <Badge variant="outline">{currentUser.role}</Badge>
+                <Badge variant={getRoleVariant(currentUser.role)}>
+                  {formatRole(currentUser.role)}
+                </Badge>
               </div>
             </div>
 
             <div>
-              <p className="text-sm font-medium mb-2">Verification Status</p>
-              <Badge variant={currentUser.isVerified ? 'success' : 'secondary'}>
-                {currentUser.isVerified ? 'Verified' : 'Unverified'}
+              <p className="text-sm font-medium mb-2">Email Verification</p>
+              <Badge variant={getStatusVariant(!!currentUser.email_verified_at)}>
+                {currentUser.email_verified_at ? 'Verified' : 'Unverified'}
+              </Badge>
+            </div>
+
+            <div>
+              <p className="text-sm font-medium mb-2">Phone Verification</p>
+              <Badge variant={getStatusVariant(!!currentUser.phone_verified_at)}>
+                {currentUser.phone_verified_at ? 'Verified' : 'Unverified'}
               </Badge>
             </div>
           </CardContent>
@@ -131,14 +200,14 @@ export default function UserDetailPage() {
             <div>
               <p className="text-sm font-medium">Account Created</p>
               <p className="text-sm text-muted-foreground">
-                {formatDate(currentUser.createdAt)}
+                {formatDate(currentUser.created_at)}
               </p>
             </div>
 
             <div>
               <p className="text-sm font-medium">Last Updated</p>
               <p className="text-sm text-muted-foreground">
-                {formatDate(currentUser.updatedAt)}
+                {formatDate(currentUser.updated_at)}
               </p>
             </div>
 
@@ -147,6 +216,18 @@ export default function UserDetailPage() {
               <p className="text-sm text-muted-foreground font-mono">
                 {currentUser.id}
               </p>
+            </div>
+
+            <div>
+              <p className="text-sm font-medium mb-2">Account Status</p>
+              <div className="flex gap-2">
+                <Badge variant={currentUser.is_suspended ? 'destructive' : 'success'}>
+                  {currentUser.is_suspended ? 'Suspended' : 'Active'}
+                </Badge>
+                <Badge variant={getStatusVariant(currentUser.terms_accepted)}>
+                  {currentUser.terms_accepted ? 'Terms Accepted' : 'Terms Pending'}
+                </Badge>
+              </div>
             </div>
           </CardContent>
         </Card>

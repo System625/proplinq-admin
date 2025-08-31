@@ -1,5 +1,3 @@
-'use client';
-
 import { UsersTable } from '@/components/data-tables/users-table';
 
 export default function UsersPage() {

@@ -30,23 +30,48 @@ export const useBookingsStore = create<BookingsState>((set, get) => ({
   statusFilter: 'all',
 
   fetchBookings: async (params) => {
+    console.log('🔄 Bookings Store: Starting fetchBookings with params:', params);
     set({ isLoading: true, error: null });
     
     try {
       const { statusFilter } = get();
+      console.log('🔍 Bookings Store: statusFilter:', statusFilter);
+      
       const response: PaginatedResponse<Booking> = await apiService.getBookings({
         status: statusFilter,
         ...params,
       });
       
+      console.log('📡 Bookings Store: Full API response:', response);
+      console.log('📊 Bookings Store: response.data:', response.data);
+      console.log('🔢 Bookings Store: response.data type:', typeof response.data);
+      console.log('📋 Bookings Store: response.data is array:', Array.isArray(response.data));
+      
+      const responseData = (response as any).data || {};
+      
+      const bookingsArray = Array.isArray(responseData.data) ? responseData.data : [];
+      const pagination = {
+        page: responseData.current_page || 1,
+        limit: responseData.per_page || 15,
+        total: responseData.total || 0,
+        totalPages: responseData.last_page || 1,
+      };
+
+      console.log('✅ Bookings Store: Final bookings array:', bookingsArray);
+      console.log('📏 Bookings Store: Bookings array length:', bookingsArray.length);
+      
       set({
-        bookings: response.data,
-        pagination: response.pagination,
+        bookings: bookingsArray,
+        pagination: pagination,
         isLoading: false,
       });
+      
+      console.log('🎯 Bookings Store: State updated successfully');
     } catch (error: any) {
+      console.error('❌ Bookings Store: Error in fetchBookings:', error);
       const errorMessage = error.response?.data?.message || 'Failed to fetch bookings';
       set({
+        bookings: [],
         error: errorMessage,
         isLoading: false,
       });

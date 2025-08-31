@@ -1,5 +1,3 @@
-'use client';
-
 import { KycTable } from '@/components/data-tables/kyc-table';
 
 export default function KycPage() {

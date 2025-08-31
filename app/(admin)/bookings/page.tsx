@@ -1,5 +1,3 @@
-'use client';
-
 import { BookingsTable } from '@/components/data-tables/bookings-table';
 
 export default function BookingsPage() {

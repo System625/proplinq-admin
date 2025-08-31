@@ -41,6 +41,18 @@ export function decodeJWT(token: string): JWTPayload | null {
 }
 
 export function isTokenExpired(token: string): boolean {
+  // For Laravel Sanctum tokens (format: "ID|hash"), we can't decode expiration
+  // The backend will return 401 if token is invalid/expired
+  // So we'll assume the token is valid if it exists and has the right format
+  
+  if (!token) return true;
+  
+  // Check if it's a Laravel Sanctum token format (ID|hash)
+  if (token.includes('|') && token.split('|').length === 2) {
+    return false; // Sanctum tokens don't expire client-side
+  }
+  
+  // If it's a JWT token, decode and check expiration
   const decoded = decodeJWT(token);
   if (!decoded) return true;
   

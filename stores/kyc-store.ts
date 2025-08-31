@@ -12,6 +12,12 @@ interface KycState {
     total: number;
     totalPages: number;
   } | null;
+  statusCounts: {
+    all: number;
+    pending: number;
+    approved: number;
+    rejected: number;
+  };
   isLoading: boolean;
   isReviewing: boolean;
   error: string | null;
@@ -21,6 +27,7 @@ interface KycState {
   fetchVerifications: (params?: { page?: number; limit?: number; status?: string }) => Promise<void>;
   fetchVerification: (id: string) => Promise<void>;
   reviewVerification: (id: string, data: KycReview) => Promise<void>;
+  fetchStatusCounts: () => Promise<void>;
   setStatusFilter: (status: string) => void;
   clearError: () => void;
 }
@@ -29,29 +36,74 @@ export const useKycStore = create<KycState>((set, get) => ({
   verifications: [],
   currentVerification: null,
   pagination: null,
+  statusCounts: {
+    all: 0,
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+  },
   isLoading: false,
   isReviewing: false,
   error: null,
   statusFilter: 'all',
 
   fetchVerifications: async (params) => {
+    console.log('🔄 KYC Store: Starting fetchVerifications with params:', params);
     set({ isLoading: true, error: null });
     
     try {
       const { statusFilter } = get();
+      console.log('🔍 KYC Store: statusFilter:', statusFilter);
+      
+      // Since backend filtering isn't working, fetch all data and filter on frontend
       const response: PaginatedResponse<KycVerification> = await apiService.getKycVerifications({
-        status: statusFilter,
+        limit: 1000, // Get more data
         ...params,
+        // Don't pass status to backend since it's not working
       });
       
+      console.log('📡 KYC Store: Full API response:', response);
+      
+      const responseData = (response as any).data || {};
+      const allVerifications = Array.isArray(responseData.data) ? responseData.data : [];
+      
+      // Filter on frontend based on statusFilter
+      let filteredVerifications = allVerifications;
+      if (statusFilter && statusFilter !== 'all') {
+        filteredVerifications = allVerifications.filter((v: any) => v.status === statusFilter);
+        console.log(`🔍 Filtered for ${statusFilter}:`, filteredVerifications.length, 'records');
+      }
+      
+      // Simple pagination on frontend (since backend pagination won't work with our filtering)
+      const page = params?.page || 1;
+      const limit = params?.limit || 15;
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginatedVerifications = filteredVerifications.slice(startIndex, endIndex);
+      
+      const pagination = {
+        page: page,
+        limit: limit,
+        total: filteredVerifications.length,
+        totalPages: Math.ceil(filteredVerifications.length / limit),
+      };
+      
+      console.log('✅ KYC Store: Final verifications array:', paginatedVerifications);
+      console.log('📏 KYC Store: Filtered length:', filteredVerifications.length);
+      console.log('📄 KYC Store: Paginated length:', paginatedVerifications.length);
+      
       set({
-        verifications: response.data,
-        pagination: response.pagination,
+        verifications: paginatedVerifications,
+        pagination: pagination,
         isLoading: false,
       });
+      
+      console.log('🎯 KYC Store: State updated successfully');
     } catch (error: any) {
+      console.error('❌ KYC Store: Error in fetchVerifications:', error);
       const errorMessage = error.response?.data?.message || 'Failed to fetch KYC verifications';
       set({
+        verifications: [],
         error: errorMessage,
         isLoading: false,
       });
@@ -86,7 +138,7 @@ export const useKycStore = create<KycState>((set, get) => ({
       
       const { verifications } = get();
       const updatedVerifications = verifications.map(verification =>
-        verification.id === id ? updatedVerification : verification
+        verification.id === parseInt(id) ? updatedVerification : verification
       );
       
       set({
@@ -103,6 +155,46 @@ export const useKycStore = create<KycState>((set, get) => ({
       const errorMessage = error.response?.data?.message || 'Failed to review KYC verification';
       toast.error(errorMessage);
       throw error;
+    }
+  },
+
+  fetchStatusCounts: async () => {
+    try {
+      console.log('🔄 Fetching status counts from all data...');
+      
+      // Since backend filtering isn't working, fetch all data and count on frontend
+      const token = typeof window !== 'undefined' ? localStorage.getItem('proplinq_admin_token') : '';
+      const response = await fetch('/api/kyc?limit=1000', { // Get more data to count properly
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+      const allVerifications = result.data?.data || [];
+      
+      console.log('📊 All KYC data:', allVerifications);
+      
+      // Count statuses from the actual data
+      const statusCounts = allVerifications.reduce((acc: Record<string, number>, verification: any) => {
+        const status = verification.status;
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
+      }, {});
+
+      const counts = {
+        all: allVerifications.length,
+        pending: statusCounts.pending || 0,
+        approved: statusCounts.approved || 0,
+        rejected: statusCounts.rejected || 0,
+      };
+
+      console.log('📊 Calculated status counts:', counts);
+
+      set({ statusCounts: counts });
+    } catch (error) {
+      console.error('Failed to fetch status counts:', error);
     }
   },
 

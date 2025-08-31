@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useUsersStore } from '@/stores/users-store';
 import {
   Table,
@@ -15,8 +15,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
+import { Search, Eye } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useDebounce } from '@/hooks/use-debounce';
 
 export function UsersTable() {
   const router = useRouter();
@@ -26,21 +35,28 @@ export function UsersTable() {
     isLoading,
     searchQuery,
     fetchUsers,
-    setSearchQuery,
   } = useUsersStore();
 
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+  const [localSearch, setLocalSearch] = useState(searchQuery);
+  const debouncedSearch = useDebounce(localSearch, 500);
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    fetchUsers({ page: 1, search: query });
-  };
+  useEffect(() => {
+    fetchUsers({ page: 1 });
+  }, [fetchUsers]);
 
   const handlePageChange = (page: number) => {
     fetchUsers({ page });
   };
+
+  const filteredUsers =
+    users.filter(
+      (user) =>
+        user.full_name
+          .toLowerCase()
+          .includes(debouncedSearch.toLowerCase()) ||
+        user.email.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        user.role.toLowerCase().includes(debouncedSearch.toLowerCase()),
+    ) || [];
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -50,7 +66,35 @@ export function UsersTable() {
     });
   };
 
-  if (isLoading && users.length === 0) {
+  const formatRole = (role: string) => {
+    const roleMap: Record<string, string> = {
+      'admin': 'Administrator',
+      'agent': 'Real Estate Agent',
+      'home_seeker': 'Home Seeker',
+      'property_owner': 'Property Owner',
+      'individual_agent': 'Individual Agent',
+      'agency_agent': 'Agency Agent',
+    };
+    return roleMap[role] || role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  const getRoleVariant = (role: string): "red" | "blue" | "green" | "purple" | "indigo" | "cyan" | "gray" => {
+    const variants = {
+      'admin': 'red' as const,
+      'agent': 'blue' as const,
+      'home_seeker': 'green' as const,
+      'property_owner': 'purple' as const,
+      'individual_agent': 'indigo' as const,
+      'agency_agent': 'cyan' as const,
+    };
+    return variants[role as keyof typeof variants] || 'gray';
+  };
+
+  const getStatusVariant = (verified: boolean): "green" | "orange" => {
+    return verified ? 'green' : 'orange';
+  };
+
+  if (isLoading && (!users || users.length === 0)) {
     return (
       <Card>
         <CardHeader>
@@ -77,22 +121,31 @@ export function UsersTable() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Users Management</CardTitle>
+      <CardHeader>        
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             placeholder="Search users..."
-            value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
             className="pl-10"
           />
         </div>
       </CardHeader>
       <CardContent>
-        {users.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            No users found
+        {!users || users.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 space-y-4">
+            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">No users found</h3>
+              <p className="text-gray-500 dark:text-gray-400">
+                {searchQuery ? `No users match "${searchQuery}"` : 'There are no users to display at the moment.'}
+              </p>
+            </div>
           </div>
         ) : (
           <>
@@ -108,25 +161,23 @@ export function UsersTable() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user) => (
+                {filteredUsers && filteredUsers.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">
-                      {user.firstName} {user.lastName}
+                      {user.full_name}
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      <Badge
-                        variant={user.isVerified ? 'success' : 'secondary'}
-                      >
-                        {user.isVerified ? 'Verified' : 'Unverified'}
+                      <Badge variant={getStatusVariant(!!user.email_verified_at)}>
+                        {user.email_verified_at ? 'Verified' : 'Unverified'}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">
-                        {user.role}
+                      <Badge variant={getRoleVariant(user.role)}>
+                        {formatRole(user.role)}
                       </Badge>
                     </TableCell>
-                    <TableCell>{formatDate(user.createdAt)}</TableCell>
+                    <TableCell>{formatDate(user.created_at)}</TableCell>
                     <TableCell>
                       <Button
                         variant="ghost"
@@ -148,27 +199,63 @@ export function UsersTable() {
                   {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
                   {pagination.total} users
                 </p>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePageChange(pagination.page - 1)}
-                    disabled={pagination.page === 1}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <span className="text-sm font-medium">
-                    Page {pagination.page} of {pagination.totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePageChange(pagination.page + 1)}
-                    disabled={pagination.page === pagination.totalPages}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (pagination.page > 1) {
+                            handlePageChange(pagination.page - 1);
+                          }
+                        }}
+                        className={pagination.page === 1 ? 'pointer-events-none opacity-50' : ''}
+                      />
+                    </PaginationItem>
+                    
+                    {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (pagination.totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (pagination.page <= 3) {
+                        pageNum = i + 1;
+                      } else if (pagination.page >= pagination.totalPages - 2) {
+                        pageNum = pagination.totalPages - 4 + i;
+                      } else {
+                        pageNum = pagination.page - 2 + i;
+                      }
+                      
+                      return (
+                        <PaginationItem key={pageNum}>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handlePageChange(pageNum);
+                            }}
+                            isActive={pagination.page === pageNum}
+                          >
+                            {pageNum}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    })}
+                    
+                    <PaginationItem>
+                      <PaginationNext 
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (pagination.page < pagination.totalPages) {
+                            handlePageChange(pagination.page + 1);
+                          }
+                        }}
+                        className={pagination.page === pagination.totalPages ? 'pointer-events-none opacity-50' : ''}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
               </div>
             )}
           </>

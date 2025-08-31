@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { useKycStore } from '@/stores/kyc-store';
+import { KycVerification } from '@/types/api';
 import {
   Table,
   TableBody,
@@ -16,8 +16,9 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ChevronLeft, ChevronRight, Eye, FileText } from 'lucide-react';
-import { MOCK_USERS } from '@/lib/mock-data';
+import { ChevronLeft, ChevronRight, Eye, FileText, User, Building, CreditCard } from 'lucide-react';
+import { DocumentButtons } from './document-buttons';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const statusColors = {
   pending: 'secondary',
@@ -25,34 +26,45 @@ const statusColors = {
   rejected: 'destructive',
 } as const;
 
-const documentTypeLabels = {
-  passport: 'Passport',
-  driver_license: 'Driver License',
-  national_id: 'National ID',
-} as const;
-
 export function KycTable() {
-  const router = useRouter();
+  const [selectedVerification, setSelectedVerification] = useState<KycVerification | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  
   const {
     verifications,
     pagination,
     isLoading,
     statusFilter,
+    statusCounts,
     fetchVerifications,
+    fetchStatusCounts,
     setStatusFilter,
   } = useKycStore();
 
   useEffect(() => {
     fetchVerifications();
-  }, [fetchVerifications]);
+    fetchStatusCounts();
+  }, [fetchVerifications, fetchStatusCounts]);
 
   const handleTabChange = (status: string) => {
     setStatusFilter(status);
     fetchVerifications({ page: 1, status });
+    // Optionally refresh counts when switching tabs
+    fetchStatusCounts();
   };
 
   const handlePageChange = (page: number) => {
     fetchVerifications({ page });
+  };
+
+  const handleViewDetails = (verification: KycVerification) => {
+    setSelectedVerification(verification);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleCloseDetailModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedVerification(null);
   };
 
   const formatDate = (dateString: string) => {
@@ -61,16 +73,6 @@ export function KycTable() {
       month: 'short',
       day: 'numeric',
     });
-  };
-
-  const getUserName = (userId: string) => {
-    const user = MOCK_USERS.find(u => u.id === userId);
-    return user ? `${user.firstName} ${user.lastName}` : 'Unknown User';
-  };
-
-  const getUserEmail = (userId: string) => {
-    const user = MOCK_USERS.find(u => u.id === userId);
-    return user?.email || 'Unknown Email';
   };
 
   if (isLoading && verifications.length === 0) {
@@ -93,11 +95,11 @@ export function KycTable() {
     );
   }
 
-  const pendingCount = verifications.filter(v => v.status === 'pending').length;
-  const approvedCount = verifications.filter(v => v.status === 'approved').length;
-  const rejectedCount = verifications.filter(v => v.status === 'rejected').length;
+  // Use status counts from the store (fetched from backend)
+  const { all: totalCount, pending: pendingCount, approved: approvedCount, rejected: rejectedCount } = statusCounts;
 
   return (
+    <>
     <Card>
       <CardHeader>
         <CardTitle>KYC Verifications</CardTitle>
@@ -105,7 +107,7 @@ export function KycTable() {
       <CardContent>
         <Tabs value={statusFilter} onValueChange={handleTabChange}>
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="all">All ({verifications.length})</TabsTrigger>
+            <TabsTrigger value="all">All ({totalCount})</TabsTrigger>
             <TabsTrigger value="pending">
               Pending ({pendingCount})
             </TabsTrigger>
@@ -118,9 +120,19 @@ export function KycTable() {
           </TabsList>
 
           <TabsContent value={statusFilter} className="mt-6">
-            {verifications.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No KYC verifications found
+            {!verifications || verifications.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 space-y-4">
+                <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                  <svg className="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="text-center">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">No KYC verifications found</h3>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    {statusFilter !== 'all' ? `No ${statusFilter} KYC verifications` : 'There are no KYC verifications to display at the moment.'}
+                  </p>
+                </div>
               </div>
             ) : (
               <>
@@ -128,63 +140,51 @@ export function KycTable() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>User</TableHead>
-                      <TableHead>Document Type</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Submitted</TableHead>
-                      <TableHead>Reviewed</TableHead>
+                      <TableHead>Documents</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {verifications.map((verification) => (
-                      <TableRow key={verification.id}>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">
-                              {getUserName(verification.userId)}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {getUserEmail(verification.userId)}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <FileText className="h-4 w-4 text-muted-foreground" />
-                            <span>
-                              {documentTypeLabels[verification.documentType]}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={statusColors[verification.status]}>
-                            {verification.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {formatDate(verification.submittedAt)}
-                        </TableCell>
-                        <TableCell>
-                          {verification.reviewedAt ? (
-                            formatDate(verification.reviewedAt)
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              router.push(`/kyc/${verification.id}`)
-                            }
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            Review
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {verifications &&
+                      verifications.map((verification) => (
+                        <TableRow key={verification.id}>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">
+                                {verification.user.full_name}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {verification.user.email}
+                              </p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={statusColors[verification.status]}
+                            >
+                              {verification.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {formatDate(verification.created_at)}
+                          </TableCell>
+                          <TableCell>
+                            <DocumentButtons verification={verification} />
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewDetails(verification)}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              Review
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
                   </TableBody>
                 </Table>
 
@@ -224,5 +224,167 @@ export function KycTable() {
         </Tabs>
       </CardContent>
     </Card>
+
+    {/* KYC Details Modal */}
+    <Dialog open={isDetailModalOpen} onOpenChange={handleCloseDetailModal}>
+      <DialogContent className="max-w-4xl h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>KYC Verification Details</DialogTitle>
+        </DialogHeader>
+        
+        {selectedVerification ? (
+          <div className="space-y-6">
+            {/* User Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  User Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Full Name</label>
+                  <p className="text-sm font-semibold">{selectedVerification.user.full_name}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Email</label>
+                  <p className="text-sm">{selectedVerification.user.email}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Phone Number</label>
+                  <p className="text-sm">{selectedVerification.user.phone_number}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Location</label>
+                  <p className="text-sm">{selectedVerification.user.location}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Agent Type</label>
+                  <p className="text-sm capitalize">{selectedVerification.user.agent_type?.replace('_', ' ')}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Agency Name</label>
+                  <p className="text-sm">{selectedVerification.user.agency_name}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* KYC Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  KYC Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">BVN</label>
+                  <p className="text-sm font-mono">{selectedVerification.bvn}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">NIN</label>
+                  <p className="text-sm font-mono">{selectedVerification.nin}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Status</label>
+                  <Badge variant={statusColors[selectedVerification.status]} className="w-fit">
+                    {selectedVerification.status}
+                  </Badge>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Submitted</label>
+                  <p className="text-sm">{formatDate(selectedVerification.created_at)}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Employment Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building className="h-5 w-5" />
+                  Employment Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Employment Status</label>
+                  <p className="text-sm capitalize">{selectedVerification.employment_status}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Occupation</label>
+                  <p className="text-sm">{selectedVerification.occupation}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Company Name</label>
+                  <p className="text-sm">{selectedVerification.company_name}</p>
+                </div>
+                {selectedVerification.business_name && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Business Name</label>
+                    <p className="text-sm">{selectedVerification.business_name}</p>
+                  </div>
+                )}
+                {selectedVerification.tin && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">TIN</label>
+                    <p className="text-sm font-mono">{selectedVerification.tin}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Documents */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Documents
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DocumentButtons verification={selectedVerification!} />
+              </CardContent>
+            </Card>
+
+            {/* Review Information */}
+            {(selectedVerification?.reviewed_by || selectedVerification?.rejection_reason) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Review Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {selectedVerification?.reviewed_by && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Reviewed By</label>
+                      <p className="text-sm">{selectedVerification.reviewed_by}</p>
+                    </div>
+                  )}
+                  {selectedVerification?.reviewed_at && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Reviewed At</label>
+                      <p className="text-sm">{formatDate(selectedVerification.reviewed_at)}</p>
+                    </div>
+                  )}
+                  {selectedVerification?.rejection_reason && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Rejection Reason</label>
+                      <p className="text-sm text-red-600">{selectedVerification.rejection_reason}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center py-8">
+            <p className="text-muted-foreground">No verification selected</p>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

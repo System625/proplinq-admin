@@ -24,7 +24,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { MOCK_BOOKINGS } from '@/lib/mock-data';
+import { useBookingsStore } from '@/stores/bookings-store';
 
 const refundSchema = z.object({
   amount: z.number().min(0.01, 'Amount must be greater than 0'),
@@ -41,6 +41,7 @@ interface RefundModalProps {
 
 export function RefundModal({ open, onOpenChange, transactionId }: RefundModalProps) {
   const { transactions, processRefund, isProcessingRefund } = useTransactionsStore();
+  const { bookings } = useBookingsStore();
   const [maxAmount, setMaxAmount] = useState(0);
 
   const form = useForm<RefundForm>({
@@ -80,7 +81,7 @@ export function RefundModal({ open, onOpenChange, transactionId }: RefundModalPr
   if (!transaction) return null;
 
   // Find the booking for this transaction
-  const booking = MOCK_BOOKINGS.find(b => b.id === transaction.bookingId);
+  const booking = bookings.find(b => b.id === transaction.bookingId);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

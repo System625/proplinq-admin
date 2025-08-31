@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { MobileNav } from '@/components/layout/mobile-nav';
@@ -10,12 +11,17 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   return (
     <AuthGuard>
       <div className="flex h-screen bg-background">
         {/* Desktop Sidebar */}
-        <div className="hidden md:flex md:w-64 md:flex-col">
-          <Sidebar />
+        <div className="hidden md:flex md:flex-col">
+          <Sidebar 
+            isCollapsed={isCollapsed}
+            onToggle={() => setIsCollapsed(!isCollapsed)}
+          />
         </div>
 
         {/* Main Content */}

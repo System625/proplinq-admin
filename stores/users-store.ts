@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 import { apiService } from '@/lib/axios';
-import { User, PaginatedResponse } from '@/types/api';
+import { ApiUser, PaginatedResponse } from '@/types/api';
 import { toast } from 'sonner';
 
 interface UsersState {
-  users: User[];
-  currentUser: User | null;
+  users: ApiUser[];
+  currentUser: ApiUser | null;
   pagination: {
     page: number;
     limit: number;
@@ -32,23 +32,56 @@ export const useUsersStore = create<UsersState>((set, get) => ({
   searchQuery: '',
 
   fetchUsers: async (params) => {
+    console.log('🔄 Users Store: Starting fetchUsers with params:', params);
     set({ isLoading: true, error: null });
     
     try {
       const { searchQuery } = get();
-      const response: PaginatedResponse<User> = await apiService.getUsers({
-        search: searchQuery,
+      console.log('🔍 Users Store: searchQuery:', searchQuery);
+      
+      const response: any = await apiService.getUsers({
         ...params,
       });
       
+      console.log('📡 Users Store: Full API response:', response);
+      console.log('📊 Users Store: response.data:', response.data);
+      console.log('🔢 Users Store: response.data type:', typeof response.data);
+      console.log('📋 Users Store: response.data is array:', Array.isArray(response.data));
+      console.log('📄 Users Store: response.pagination:', response.pagination);
+      
+      const responseData = response.data || {};
+      
+      const usersArray = Array.isArray(responseData.data) ? responseData.data : [];
+      const pagination = {
+        page: responseData.current_page || 1,
+        limit: responseData.per_page || 15,
+        total: responseData.total || 0,
+        totalPages: responseData.last_page || 1,
+      };
+      
+      console.log('✅ Users Store: Final users array:', usersArray);
+      console.log('📏 Users Store: Users array length:', usersArray.length);
+      
       set({
-        users: response.data,
-        pagination: response.pagination,
+        users: usersArray,
+        pagination: pagination,
         isLoading: false,
       });
+      
+      console.log('🎯 Users Store: State updated successfully');
+      
+      // Verify the state was actually updated
+      const { users: updatedUsers } = get();
+      console.log('🔍 Users Store: Post-update verification - users:', updatedUsers);
+      console.log('🔍 Users Store: Post-update verification - users length:', updatedUsers.length);
     } catch (error: any) {
+      console.error('❌ Users Store: Error in fetchUsers:', error);
+      console.error('❌ Users Store: Error response:', error.response);
+      console.error('❌ Users Store: Error response data:', error.response?.data);
+      
       const errorMessage = error.response?.data?.message || 'Failed to fetch users';
       set({
+        users: [],
         error: errorMessage,
         isLoading: false,
       });
@@ -60,7 +93,12 @@ export const useUsersStore = create<UsersState>((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      const user = await apiService.getUser(id);
+      const response = await apiService.getUser(id);
+      // Handle the response structure that includes status, message, data
+      const user = (response as any).data || response;
+      console.log('👤 Users Store: Individual user response:', response);
+      console.log('👤 Users Store: Extracted user:', user);
+      
       set({
         currentUser: user,
         isLoading: false,

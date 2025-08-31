@@ -29,19 +29,33 @@ export const useTransactionsStore = create<TransactionsState>((set, get) => ({
   error: null,
 
   fetchTransactions: async (params) => {
+    console.log('🔄 Transactions Store: Starting fetchTransactions with params:', params);
     set({ isLoading: true, error: null });
     
     try {
       const response: PaginatedResponse<Transaction> = await apiService.getTransactions(params);
       
+      console.log('📡 Transactions Store: Full API response:', response);
+      console.log('📊 Transactions Store: response.data:', response.data);
+      console.log('🔢 Transactions Store: response.data type:', typeof response.data);
+      console.log('📋 Transactions Store: response.data is array:', Array.isArray(response.data));
+      
+      const transactionsArray = Array.isArray(response.data) ? response.data : [];
+      console.log('✅ Transactions Store: Final transactions array:', transactionsArray);
+      console.log('📏 Transactions Store: Transactions array length:', transactionsArray.length);
+      
       set({
-        transactions: response.data,
+        transactions: transactionsArray,
         pagination: response.pagination,
         isLoading: false,
       });
+      
+      console.log('🎯 Transactions Store: State updated successfully');
     } catch (error: any) {
+      console.error('❌ Transactions Store: Error in fetchTransactions:', error);
       const errorMessage = error.response?.data?.message || 'Failed to fetch transactions';
       set({
+        transactions: [],
         error: errorMessage,
         isLoading: false,
       });

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,7 +21,9 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isLoading } = useAuthStore();
+  const { login, isLoading, checkAuth, initAuth } = useAuthStore();
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [shouldShowLogin, setShouldShowLogin] = useState(false);
 
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -30,6 +33,27 @@ export default function LoginPage() {
     },
   });
 
+  // Redirect authenticated users away from login page
+  useEffect(() => {
+    const checkAuthentication = async () => {
+      try {
+        initAuth();
+        if (checkAuth()) {
+          router.push('/dashboard');
+          return;
+        }
+        setShouldShowLogin(true);
+      } catch (error) {
+        console.error('Auth check error:', error);
+        setShouldShowLogin(true);
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    checkAuthentication();
+  }, [checkAuth, initAuth, router]);
+
   async function onSubmit(values: LoginForm) {
     try {
       await login(values);
@@ -37,6 +61,23 @@ export default function LoginPage() {
     } catch {
       // Error handling is now done in the auth store with toast notifications
     }
+  }
+
+  // Show loading while checking authentication
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-proplinq-blue/10 to-proplinq-cyan/10">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-sm text-muted-foreground">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render login form if user is authenticated or we shouldn't show login
+  if (!shouldShowLogin) {
+    return null;
   }
 
   return (
@@ -58,13 +99,6 @@ export default function LoginPage() {
           <CardDescription>
             Sign in to access the admin dashboard
           </CardDescription>
-          <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
-            <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">Demo Credentials:</p>
-            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-              Email: admin@proplinq.com<br />
-              Password: admin123
-            </p>
-          </div>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -78,7 +112,7 @@ export default function LoginPage() {
                     <FormControl>
                       <Input
                         type="email"
-                        placeholder="admin@proplinq.com"
+                        placeholder="Enter your email"
                         {...field}
                       />
                     </FormControl>

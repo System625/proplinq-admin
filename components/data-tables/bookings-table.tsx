@@ -99,8 +99,7 @@ export function BookingsTable() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Bookings Management</CardTitle>
+      <CardHeader>        
         <div className="flex items-center space-x-4">
           <Select value={statusFilter} onValueChange={handleFilterChange}>
             <SelectTrigger className="w-40">
@@ -117,9 +116,19 @@ export function BookingsTable() {
         </div>
       </CardHeader>
       <CardContent>
-        {bookings.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            No bookings found
+        {!bookings || bookings.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 space-y-4">
+            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 9l6-6m0 0l6 6m-6-6v6" />
+              </svg>
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">No bookings found</h3>
+              <p className="text-gray-500 dark:text-gray-400">
+                {statusFilter !== 'all' ? `No bookings with "${statusFilter}" status` : 'There are no bookings to display at the moment.'}
+              </p>
+            </div>
           </div>
         ) : (
           <>

@@ -1,5 +1,3 @@
-'use client';
-
 import { TransactionsTable } from '@/components/data-tables/transactions-table';
 import { FinancialSummary } from '@/components/dashboard/financial-summary';
 
