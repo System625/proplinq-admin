@@ -24,6 +24,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useBookingsStore } from '@/stores/bookings-store';
 
 const refundSchema = z.object({
@@ -85,7 +86,7 @@ export function RefundModal({ open, onOpenChange, transactionId }: RefundModalPr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Process Refund</DialogTitle>
           <DialogDescription>
@@ -95,59 +96,61 @@ export function RefundModal({ open, onOpenChange, transactionId }: RefundModalPr
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid gap-4">
-              <div className="space-y-2">
-                <div className="text-sm">
-                  <p><span className="font-medium">Original Amount:</span> ${transaction.amount}</p>
-                  <p><span className="font-medium">Payment Method:</span> {transaction.paymentMethod}</p>
-                  {booking && (
-                    <p><span className="font-medium">Guest:</span> {booking.guestName}</p>
-                  )}
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1">
+            <ScrollArea className="flex-1 pr-2">
+              <div className="grid gap-4 p-1">
+                <div className="space-y-2">
+                  <div className="text-sm">
+                    <p><span className="font-medium">Original Amount:</span> ${transaction.amount}</p>
+                    <p><span className="font-medium">Payment Method:</span> {transaction.paymentMethod}</p>
+                    {booking && (
+                      <p><span className="font-medium">Guest:</span> {booking.guestName}</p>
+                    )}
+                  </div>
                 </div>
+
+                <FormField
+                  control={form.control}
+                  name="amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Refund Amount</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          max={maxAmount}
+                          placeholder="0.00"
+                          {...field}
+                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="reason"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Reason for Refund</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Please provide a reason for this refund..."
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
+            </ScrollArea>
 
-              <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Refund Amount</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max={maxAmount}
-                        placeholder="0.00"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="reason"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Reason for Refund</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Please provide a reason for this refund..."
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <DialogFooter>
+            <DialogFooter className="border-t pt-4">
               <Button
                 type="button"
                 variant="outline"

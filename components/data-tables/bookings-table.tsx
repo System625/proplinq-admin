@@ -13,7 +13,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -21,8 +22,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ChevronLeft, ChevronRight, Edit } from 'lucide-react';
-import { Booking } from '@/types/api';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Edit, Search, DollarSign } from 'lucide-react';
+import { Booking, BookingUpdate } from '@/types/api';
+import { BookingEditModal } from '@/components/modals/booking-edit-modal';
+import { BookingRefundModal } from '@/components/modals/booking-refund-modal';
+import { toast } from 'sonner';
 
 const statusColors = {
   pending: 'secondary',
@@ -37,25 +49,148 @@ export function BookingsTable() {
     pagination,
     isLoading,
     statusFilter,
+    searchTerm,
     fetchBookings,
     updateBooking,
+    processRefund,
     setStatusFilter,
+    setSearchTerm,
   } = useBookingsStore();
 
-  const [editingBooking, setEditingBooking] = useState<string | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    status: '',
+    admin_notes: '',
+  });
+  const [refundFormData, setRefundFormData] = useState({
+    amount: '',
+    reason: '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [localSearchTerm, setLocalSearchTerm] = useState('');
 
   useEffect(() => {
     fetchBookings();
   }, [fetchBookings]);
 
-  const handleStatusChange = (bookingId: string, newStatus: string) => {
-    updateBooking(bookingId, { status: newStatus as Booking['status'] });
-    setEditingBooking(null);
+  useEffect(() => {
+    const delayedSearch = setTimeout(() => {
+      if (localSearchTerm !== searchTerm) {
+        setSearchTerm(localSearchTerm);
+        fetchBookings({ page: 1, search: localSearchTerm });
+      }
+    }, 300);
+
+    return () => clearTimeout(delayedSearch);
+  }, [localSearchTerm, searchTerm, setSearchTerm, fetchBookings]);
+
+  const handleEditClick = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setEditFormData({
+      status: booking.status,
+      admin_notes: '',
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditModalClose = () => {
+    setIsEditModalOpen(false);
+    setSelectedBooking(null);
+    setEditFormData({
+      status: '',
+      admin_notes: '',
+    });
+  };
+
+  const handleRefundClick = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setRefundFormData({
+      amount: '',
+      reason: '',
+    });
+    setIsRefundModalOpen(true);
+  };
+
+  const handleRefundModalClose = () => {
+    setIsRefundModalOpen(false);
+    setSelectedBooking(null);
+    setRefundFormData({
+      amount: '',
+      reason: '',
+    });
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedBooking) return;
+
+    setIsSubmitting(true);
+    try {
+      await updateBooking(selectedBooking.id, {
+        status: editFormData.status as Booking['status'],
+        admin_notes: editFormData.admin_notes,
+      } as BookingUpdate);
+      
+      toast.success('Booking updated successfully');
+      handleEditModalClose();
+    } catch {
+      toast.error('Failed to update booking');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleStatusChange = (value: string) => {
+    setEditFormData(prev => ({
+      ...prev,
+      status: value,
+    }));
+  };
+
+  const handleNotesChange = (value: string) => {
+    setEditFormData(prev => ({
+      ...prev,
+      admin_notes: value,
+    }));
+  };
+
+  const handleRefundSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedBooking) return;
+
+    setIsSubmitting(true);
+    try {
+      const amount = parseFloat(refundFormData.amount);
+      await processRefund(selectedBooking.id, amount, refundFormData.reason);
+      
+      toast.success('Refund processed successfully');
+      handleRefundModalClose();
+    } catch {
+      toast.error('Failed to process refund');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRefundAmountChange = (value: string) => {
+    setRefundFormData(prev => ({
+      ...prev,
+      amount: value,
+    }));
+  };
+
+  const handleRefundReasonChange = (value: string) => {
+    setRefundFormData(prev => ({
+      ...prev,
+      reason: value,
+    }));
   };
 
   const handleFilterChange = (status: string) => {
     setStatusFilter(status);
-    fetchBookings({ page: 1, status });
+    fetchBookings({ page: 1, status: status !== 'all' ? status : undefined });
   };
 
   const handlePageChange = (page: number) => {
@@ -80,8 +215,7 @@ export function BookingsTable() {
   if (isLoading && bookings.length === 0) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle>Bookings Management</CardTitle>
+        <CardHeader>          
           <div className="flex items-center space-x-4">
             <Skeleton className="h-10 w-40" />
           </div>
@@ -100,7 +234,16 @@ export function BookingsTable() {
   return (
     <Card>
       <CardHeader>        
-        <div className="flex items-center space-x-4">
+        <div className="flex w-full items-center space-x-4">
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Search bookings..."
+              value={localSearchTerm}
+              onChange={(e) => setLocalSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
           <Select value={statusFilter} onValueChange={handleFilterChange}>
             <SelectTrigger className="w-40">
               <SelectValue placeholder="Filter by status" />
@@ -160,45 +303,28 @@ export function BookingsTable() {
                       {formatCurrency(booking.totalAmount)}
                     </TableCell>
                     <TableCell>
-                      {editingBooking === booking.id ? (
-                        <Select
-                          value={booking.status}
-                          onValueChange={(value) => handleStatusChange(booking.id, value)}
-                        >
-                          <SelectTrigger className="w-32">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="confirmed">Confirmed</SelectItem>
-                            <SelectItem value="completed">Completed</SelectItem>
-                            <SelectItem value="cancelled">Cancelled</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <Badge variant={statusColors[booking.status]}>
-                          {booking.status}
-                        </Badge>
-                      )}
+                      <Badge variant={statusColors[booking.status]}>
+                        {booking.status}
+                      </Badge>
                     </TableCell>
                     <TableCell>
-                      {editingBooking === booking.id ? (
+                      <div className="flex space-x-2">
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => setEditingBooking(null)}
-                        >
-                          Cancel
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setEditingBooking(booking.id)}
+                          onClick={() => handleEditClick(booking)}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                      )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRefundClick(booking)}
+                          className="text-blue-600 hover:text-blue-700"
+                        >
+                          <DollarSign className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -212,32 +338,90 @@ export function BookingsTable() {
                   {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
                   {pagination.total} bookings
                 </p>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePageChange(pagination.page - 1)}
-                    disabled={pagination.page === 1}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <span className="text-sm font-medium">
-                    Page {pagination.page} of {pagination.totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePageChange(pagination.page + 1)}
-                    disabled={pagination.page === pagination.totalPages}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (pagination.page > 1) {
+                            handlePageChange(pagination.page - 1);
+                          }
+                        }}
+                        className={pagination.page === 1 ? 'pointer-events-none opacity-50' : ''}
+                      />
+                    </PaginationItem>
+                    
+                    {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (pagination.totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (pagination.page <= 3) {
+                        pageNum = i + 1;
+                      } else if (pagination.page >= pagination.totalPages - 2) {
+                        pageNum = pagination.totalPages - 4 + i;
+                      } else {
+                        pageNum = pagination.page - 2 + i;
+                      }
+                      
+                      return (
+                        <PaginationItem key={pageNum}>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handlePageChange(pageNum);
+                            }}
+                            isActive={pagination.page === pageNum}
+                          >
+                            {pageNum}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    })}
+                    
+                    <PaginationItem>
+                      <PaginationNext 
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (pagination.page < pagination.totalPages) {
+                            handlePageChange(pagination.page + 1);
+                          }
+                        }}
+                        className={pagination.page === pagination.totalPages ? 'pointer-events-none opacity-50' : ''}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
               </div>
             )}
           </>
         )}
       </CardContent>
+
+      <BookingEditModal
+        selectedBooking={selectedBooking}
+        isOpen={isEditModalOpen}
+        isSubmitting={isSubmitting}
+        editFormData={editFormData}
+        onClose={handleEditModalClose}
+        onSubmit={handleEditSubmit}
+        onStatusChange={handleStatusChange}
+        onNotesChange={handleNotesChange}
+      />
+
+      <BookingRefundModal
+        selectedBooking={selectedBooking}
+        isOpen={isRefundModalOpen}
+        isSubmitting={isSubmitting}
+        refundFormData={refundFormData}
+        onClose={handleRefundModalClose}
+        onSubmit={handleRefundSubmit}
+        onAmountChange={handleRefundAmountChange}
+        onReasonChange={handleRefundReasonChange}
+      />
     </Card>
   );
 }

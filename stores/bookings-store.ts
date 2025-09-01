@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { apiService } from '@/lib/axios';
-import { Booking, PaginatedResponse } from '@/types/api';
+import { Booking, BookingUpdate, PaginatedResponse, RefundRequest, Transaction } from '@/types/api';
 import { toast } from 'sonner';
 
 interface BookingsState {
@@ -14,11 +14,14 @@ interface BookingsState {
   isLoading: boolean;
   error: string | null;
   statusFilter: string;
+  searchTerm: string;
   
   // Actions
-  fetchBookings: (params?: { page?: number; limit?: number; status?: string }) => Promise<void>;
+  fetchBookings: (params?: { page?: number; limit?: number; status?: string; search?: string }) => Promise<void>;
   updateBooking: (id: string, data: Partial<Booking>) => Promise<void>;
+  processRefund: (bookingId: string, amount: number, reason: string) => Promise<Transaction>;
   setStatusFilter: (status: string) => void;
+  setSearchTerm: (term: string) => void;
   clearError: () => void;
 }
 
@@ -28,17 +31,20 @@ export const useBookingsStore = create<BookingsState>((set, get) => ({
   isLoading: false,
   error: null,
   statusFilter: 'all',
+  searchTerm: '',
 
   fetchBookings: async (params) => {
     console.log('🔄 Bookings Store: Starting fetchBookings with params:', params);
     set({ isLoading: true, error: null });
     
     try {
-      const { statusFilter } = get();
+      const { statusFilter, searchTerm } = get();
       console.log('🔍 Bookings Store: statusFilter:', statusFilter);
+      console.log('🔍 Bookings Store: searchTerm:', searchTerm);
       
       const response: PaginatedResponse<Booking> = await apiService.getBookings({
-        status: statusFilter,
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        search: searchTerm || params?.search,
         ...params,
       });
       
@@ -47,14 +53,13 @@ export const useBookingsStore = create<BookingsState>((set, get) => ({
       console.log('🔢 Bookings Store: response.data type:', typeof response.data);
       console.log('📋 Bookings Store: response.data is array:', Array.isArray(response.data));
       
-      const responseData = (response as any).data || {};
-      
-      const bookingsArray = Array.isArray(responseData.data) ? responseData.data : [];
-      const pagination = {
-        page: responseData.current_page || 1,
-        limit: responseData.per_page || 15,
-        total: responseData.total || 0,
-        totalPages: responseData.last_page || 1,
+      // The API now returns properly transformed data
+      const bookingsArray = Array.isArray(response.data) ? response.data : [];
+      const pagination = response.pagination || {
+        page: 1,
+        limit: 15,
+        total: 0,
+        totalPages: 1,
       };
 
       console.log('✅ Bookings Store: Final bookings array:', bookingsArray);
@@ -79,36 +84,73 @@ export const useBookingsStore = create<BookingsState>((set, get) => ({
     }
   },
 
-  updateBooking: async (id: string, data: Partial<Booking>) => {
+  updateBooking: async (id: string, data: BookingUpdate) => {
     const { bookings } = get();
+    
+    console.log('🔄 Bookings Store: Updating booking', id, 'with data:', data);
     
     // Optimistic update
     const optimisticBookings = bookings.map(booking =>
-      booking.id === id ? { ...booking, ...data } : booking
+      booking.id === id ? { ...booking, status: data.status || booking.status } : booking
     );
     set({ bookings: optimisticBookings });
     
     try {
       const updatedBooking = await apiService.updateBooking(id, data);
+      console.log('✅ Bookings Store: Update response:', updatedBooking);
       
-      // Update with actual response
+      // Update with actual response - handle both direct booking object and nested data
+      const bookingData = (updatedBooking as any).data || updatedBooking;
+      
       const updatedBookings = bookings.map(booking =>
-        booking.id === id ? updatedBooking : booking
+        booking.id === id ? {
+          ...booking,
+          status: bookingData.status || data.status || booking.status
+        } : booking
       );
       set({ bookings: updatedBookings });
       
-      toast.success('Booking updated successfully');
+      console.log('🎯 Bookings Store: Bookings updated successfully');
     } catch (error: any) {
+      console.error('❌ Bookings Store: Update failed:', error);
       // Revert optimistic update
       set({ bookings });
       
-      const errorMessage = error.response?.data?.message || 'Failed to update booking';
-      toast.error(errorMessage);
+      const errorMessage = error.message || 'Failed to update booking';
+      throw new Error(errorMessage);
+    }
+  },
+
+  processRefund: async (bookingId: string, amount: number, reason: string) => {
+    console.log('🔄 Bookings Store: Processing refund for booking', bookingId, 'amount:', amount, 'reason:', reason);
+    
+    try {
+      const refundData: RefundRequest = {
+        bookingId,
+        amount,
+        reason,
+      };
+      
+      const transaction = await apiService.processRefund(refundData);
+      console.log('✅ Bookings Store: Refund processed successfully:', transaction);
+      
+      // Refresh bookings to get updated data
+      await get().fetchBookings();
+      
+      return transaction;
+    } catch (error: any) {
+      console.error('❌ Bookings Store: Refund failed:', error);
+      const errorMessage = error.message || 'Failed to process refund';
+      throw new Error(errorMessage);
     }
   },
 
   setStatusFilter: (status: string) => {
     set({ statusFilter: status });
+  },
+
+  setSearchTerm: (term: string) => {
+    set({ searchTerm: term });
   },
 
   clearError: () => {

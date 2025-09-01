@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { ZoomIn, ZoomOut, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface DocumentViewerModalProps {
@@ -73,66 +74,68 @@ export function DocumentViewerModal({
         <DialogHeader>
           <DialogTitle>Document Viewer</DialogTitle>
         </DialogHeader>
-        <div className="flex-grow overflow-hidden">
-          <div className="flex flex-col items-center h-full overflow-y-auto">
-            <Document
-              file={documentFile}
-              onLoadSuccess={onDocumentLoadSuccess}
-              loading={<Skeleton className="w-full h-[80vh]" />}
-              error={
-                <div className="flex items-center justify-center w-full h-[80vh] text-red-500">
-                  <p>Failed to load PDF document</p>
-                </div>
-              }
-                          >
+        <div className="flex-grow flex flex-col">
+          <ScrollArea className="h-[400px]">
+            <div className="flex flex-col items-center p-4">
+              <Document
+                file={documentFile}
+                onLoadSuccess={onDocumentLoadSuccess}
+                loading={<Skeleton className="w-full h-[80vh]" />}
+                error={
+                  <div className="flex items-center justify-center w-full h-[80vh] text-red-500">
+                    <p>Failed to load PDF document</p>
+                  </div>
+                }
+              >
                 <Page 
                   pageNumber={pageNumber} 
                   scale={scale}
                   width={Math.min(window.innerWidth * 0.8, 800)}
                 />
               </Document>
-            {numPages && (
-              <div className="flex items-center justify-center space-x-4 p-4 bg-background border-t">
+            </div>
+          </ScrollArea>
+          {numPages && (
+            <div className="flex items-center justify-center space-x-4 p-4 bg-background border-t">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setScale(scale - 0.1)}
+                disabled={scale <= 0.5}
+              >
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setScale(scale + 0.1)}
+                disabled={scale >= 3.0}
+              >
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+              <div className="flex items-center space-x-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setScale(scale - 0.1)}
-                  disabled={scale <= 0.5}
+                  onClick={goToPrevPage}
+                  disabled={pageNumber <= 1}
                 >
-                  <ZoomOut className="h-4 w-4" />
+                  <ChevronLeft className="h-4 w-4" />
                 </Button>
+                <span>
+                  Page {pageNumber} of {numPages}
+                </span>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setScale(scale + 0.1)}
-                  disabled={scale >= 3.0}
+                  onClick={goToNextPage}
+                  disabled={pageNumber >= numPages}
                 >
-                  <ZoomIn className="h-4 w-4" />
+                  <ChevronRight className="h-4 w-4" />
                 </Button>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={goToPrevPage}
-                    disabled={pageNumber <= 1}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <span>
-                    Page {pageNumber} of {numPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={goToNextPage}
-                    disabled={pageNumber >= numPages}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_BASE_URL = process.env.BACKEND_API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://proapi.proplinq.com/api/v1';
+const API_BASE_URL = process.env.BACKEND_API_URL;
 
 export async function POST(request: NextRequest) {
   try {

@@ -16,9 +16,11 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ChevronLeft, ChevronRight, Eye, FileText, User, Building, CreditCard } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Eye, FileText, User, Building, CreditCard, Check, X } from 'lucide-react';
 import { DocumentButtons } from './document-buttons';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { KycReviewModal } from '@/components/modals/kyc-review-modal';
+import { toast } from 'sonner';
 
 const statusColors = {
   pending: 'secondary',
@@ -29,6 +31,12 @@ const statusColors = {
 export function KycTable() {
   const [selectedVerification, setSelectedVerification] = useState<KycVerification | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [reviewData, setReviewData] = useState({
+    action: '' as 'approve' | 'reject' | '',
+    reason: '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const {
     verifications,
@@ -38,6 +46,7 @@ export function KycTable() {
     statusCounts,
     fetchVerifications,
     fetchStatusCounts,
+    reviewVerification,
     setStatusFilter,
   } = useKycStore();
 
@@ -65,6 +74,63 @@ export function KycTable() {
   const handleCloseDetailModal = () => {
     setIsDetailModalOpen(false);
     setSelectedVerification(null);
+  };
+
+  const handleReviewClick = (verification: KycVerification, action?: 'approve' | 'reject') => {
+    setSelectedVerification(verification);
+    setReviewData({
+      action: action || '',
+      reason: '',
+    });
+    setIsReviewModalOpen(true);
+  };
+
+  const handleReviewModalClose = () => {
+    setIsReviewModalOpen(false);
+    setSelectedVerification(null);
+    setReviewData({
+      action: '',
+      reason: '',
+    });
+  };
+
+  const handleReviewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedVerification || !reviewData.action) return;
+
+    setIsSubmitting(true);
+    try {
+      await reviewVerification(selectedVerification.id.toString(), {
+        id: selectedVerification.id.toString(),
+        action: reviewData.action,
+        reason: reviewData.reason || undefined,
+      });
+      
+      toast.success(`KYC verification ${reviewData.action === 'approve' ? 'approved' : 'rejected'} successfully`);
+      handleReviewModalClose();
+      // Refresh data
+      fetchVerifications();
+      fetchStatusCounts();
+    } catch {
+      toast.error(`Failed to ${reviewData.action} KYC verification`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleActionChange = (action: 'approve' | 'reject') => {
+    setReviewData(prev => ({
+      ...prev,
+      action,
+      reason: action === 'approve' ? '' : prev.reason, // Clear reason for approval
+    }));
+  };
+
+  const handleReasonChange = (reason: string) => {
+    setReviewData(prev => ({
+      ...prev,
+      reason,
+    }));
   };
 
   const formatDate = (dateString: string) => {
@@ -174,14 +240,38 @@ export function KycTable() {
                             <DocumentButtons verification={verification} />
                           </TableCell>
                           <TableCell>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewDetails(verification)}
-                            >
-                              <Eye className="h-4 w-4 mr-1" />
-                              Review
-                            </Button>
+                            <div className="flex space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewDetails(verification)}
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                View
+                              </Button>
+                              {verification.status === 'pending' && (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleReviewClick(verification, 'approve')}
+                                    className="text-green-600 hover:text-green-700 border-green-300 hover:border-green-400"
+                                  >
+                                    <Check className="h-4 w-4 mr-1" />
+                                    Approve
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleReviewClick(verification, 'reject')}
+                                    className="text-red-600 hover:text-red-700 border-red-300 hover:border-red-400"
+                                  >
+                                    <X className="h-4 w-4 mr-1" />
+                                    Reject
+                                  </Button>
+                                </>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -385,6 +475,18 @@ export function KycTable() {
         )}
       </DialogContent>
     </Dialog>
+
+    {/* KYC Review Modal */}
+    <KycReviewModal
+      selectedVerification={selectedVerification}
+      isOpen={isReviewModalOpen}
+      isSubmitting={isSubmitting}
+      reviewData={reviewData}
+      onClose={handleReviewModalClose}
+      onSubmit={handleReviewSubmit}
+      onActionChange={handleActionChange}
+      onReasonChange={handleReasonChange}
+    />
     </>
   );
 }

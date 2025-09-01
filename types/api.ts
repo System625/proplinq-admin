@@ -90,6 +90,26 @@ export interface Booking {
   guestName: string;
   guestEmail: string;
   createdAt: string;
+  property?: {
+    id: number;
+    title: string;
+    description: string;
+    price: string;
+    location: string;
+    type: string;
+    category: string;
+    bedrooms?: number;
+    bathrooms?: number;
+    features: string[];
+    status: string;
+  };
+  guest?: ApiUser;
+  host?: ApiUser;
+}
+
+// Extended type for booking updates that includes admin fields
+export interface BookingUpdate extends Partial<Booking> {
+  admin_notes?: string;
 }
 
 export interface Transaction {
