@@ -212,3 +212,24 @@ export interface ApiError {
   code: string;
   details?: any;
 }
+
+export interface BlogPost {
+  id: number;
+  title: string;
+  excerpt: string;
+  content: string;
+  image: string;
+  is_published?: boolean;
+  published_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BlogPostCreate {
+  title: string;
+  excerpt: string;
+  content: string;
+  image: string;
+}
+
+export interface BlogPostUpdate extends Partial<BlogPostCreate> {}

@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"path": "../../proplinq-agent"
+		},
+		{
+			"path": "../../proplinq-launch-oasis"
+		}
+	],
+	"settings": {}
+}

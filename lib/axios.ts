@@ -1,4 +1,4 @@
-import { LoginCredentials, ApiLoginResponse, DashboardStats, ApiUser, Booking, BookingUpdate, Transaction, KycVerification, RefundRequest, KycReview, PaginatedResponse } from '@/types/api';
+import { LoginCredentials, ApiLoginResponse, DashboardStats, ApiUser, Booking, BookingUpdate, Transaction, KycVerification, RefundRequest, KycReview, PaginatedResponse, BlogPost, BlogPostCreate, BlogPostUpdate } from '@/types/api';
 
 // Production API service
 export const apiService = {
@@ -280,7 +280,213 @@ export const apiService = {
     if (!response.ok) {
       throw new Error('Failed to review KYC verification');
     }
-    
+
     return await response.json();
+  },
+
+  // Blog Posts
+  async getBlogPosts(params?: Record<string, unknown>): Promise<PaginatedResponse<BlogPost>> {
+    console.log('🔄 API Service: Fetching blog posts with params:', params);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('proplinq_admin_token') : null;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const queryString = params ? new URLSearchParams(params as Record<string, string>).toString() : '';
+    const url = queryString ? `/api/blog-posts?${queryString}` : '/api/blog-posts';
+    console.log('🌐 API Service: Blog posts URL:', url);
+
+    const response = await fetch(url, { headers });
+    console.log('📡 API Service: Blog posts response status:', response.status);
+
+    if (!response.ok) {
+      console.error('❌ API Service: Blog posts failed with status:', response.status);
+      throw new Error('Failed to fetch blog posts');
+    }
+
+    const data = await response.json();
+    console.log('📊 API Service: Blog posts data:', data);
+    return data;
+  },
+
+  async getBlogPost(id: string): Promise<BlogPost> {
+    console.log('🔄 API Service: Fetching blog post with ID:', id);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('proplinq_admin_token') : null;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`/api/blog-posts/${id}`, { headers });
+    console.log('📡 API Service: Blog post response status:', response.status);
+
+    if (!response.ok) {
+      console.error('❌ API Service: Blog post failed with status:', response.status);
+      throw new Error('Failed to fetch blog post');
+    }
+
+    const data = await response.json();
+    console.log('📊 API Service: Blog post data:', data);
+    return data;
+  },
+
+  async createBlogPost(data: BlogPostCreate): Promise<BlogPost> {
+    console.log('🔄 API Service: Creating blog post with data:', data);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('proplinq_admin_token') : null;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    console.log('📤 API Service: Sending JSON data:', JSON.stringify(data, null, 2));
+
+    const response = await fetch('/api/blog-posts', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data),
+    });
+
+    console.log('📡 API Service: Create blog post response status:', response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('❌ API Service: Create blog post failed:', errorData);
+      throw new Error(errorData.message || 'Failed to create blog post');
+    }
+
+    const result = await response.json();
+    console.log('✅ API Service: Create blog post successful:', result);
+    return result;
+  },
+
+  async updateBlogPost(id: string, data: BlogPostUpdate): Promise<BlogPost> {
+    console.log('🔄 API Service: Updating blog post', id, 'with data:', data);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('proplinq_admin_token') : null;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    console.log('📤 API Service: Sending JSON update data:', JSON.stringify(data, null, 2));
+
+    const response = await fetch(`/api/blog-posts/${id}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(data),
+    });
+
+    console.log('📡 API Service: Update blog post response status:', response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('❌ API Service: Update blog post failed:', errorData);
+      throw new Error(errorData.message || 'Failed to update blog post');
+    }
+
+    const result = await response.json();
+    console.log('✅ API Service: Update blog post successful:', result);
+    return result;
+  },
+
+  async deleteBlogPost(id: string): Promise<void> {
+    console.log('🔄 API Service: Deleting blog post with ID:', id);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('proplinq_admin_token') : null;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`/api/blog-posts/${id}`, {
+      method: 'DELETE',
+      headers,
+    });
+
+    console.log('📡 API Service: Delete blog post response status:', response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('❌ API Service: Delete blog post failed:', errorData);
+      throw new Error(errorData.message || 'Failed to delete blog post');
+    }
+
+    console.log('✅ API Service: Delete blog post successful');
+  },
+
+  async uploadBlogPostImage(file: File): Promise<{ image_path: string }> {
+    console.log('🔄 API Service: Uploading blog post image:', file.name);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('proplinq_admin_token') : null;
+    const headers: Record<string, string> = {};
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const formData = new FormData();
+    formData.append('image_file', file);
+
+    console.log('📤 API Service: Uploading file:', file.name, file.size, file.type);
+
+    const response = await fetch('/api/blog-posts/upload-image', {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    console.log('📡 API Service: Upload image response status:', response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('❌ API Service: Upload image failed:', errorData);
+      throw new Error(errorData.message || 'Failed to upload image');
+    }
+
+    const result = await response.json();
+    console.log('✅ API Service: Upload image successful:', result);
+    return result;
+  },
+
+  async publishBlogPost(id: string): Promise<BlogPost> {
+    console.log('🔄 API Service: Publishing blog post with ID:', id);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('proplinq_admin_token') : null;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`/api/blog-posts/${id}/publish`, {
+      method: 'POST',
+      headers,
+    });
+
+    console.log('📡 API Service: Publish blog post response status:', response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('❌ API Service: Publish blog post failed:', errorData);
+      throw new Error(errorData.message || 'Failed to publish blog post');
+    }
+
+    const result = await response.json();
+    console.log('✅ API Service: Publish blog post successful:', result);
+    return result;
   },
 };

@@ -3,16 +3,17 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Calendar, 
-  CreditCard, 
+import {
+  LayoutDashboard,
+  Users,
+  Calendar,
+  CreditCard,
   FileText,
   Database,
   LogOut,
   Menu,
   X,
+  PenTool,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -29,6 +30,11 @@ const navigation = [
     name: 'Users',
     href: '/users',
     icon: Users,
+  },
+  {
+    name: 'Blog Posts',
+    href: '/blog-posts',
+    icon: PenTool,
   },
   {
     name: 'Bookings',
