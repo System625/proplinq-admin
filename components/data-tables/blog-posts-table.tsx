@@ -21,6 +21,7 @@ import { BlogPostEditModal } from '@/components/modals/blog-post-edit-modal';
 import { BlogPostDeleteModal } from '@/components/modals/blog-post-delete-modal';
 import { BlogPost, BlogPostCreate, BlogPostUpdate } from '@/types/api';
 import Image from 'next/image';
+import { toast } from 'sonner';
 
 export function BlogPostsTable() {
   const {
@@ -142,6 +143,23 @@ export function BlogPostsTable() {
     if (file) {
       console.log('📷 BlogPostsTable: File selected for create:', file.name, file.size);
 
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Invalid file type. Please upload a JPEG, PNG, JPG, GIF, or SVG image.');
+        e.target.value = ''; // Reset input
+        return;
+      }
+
+      // Validate file size (2MB max)
+      const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
+      if (file.size > maxSizeInBytes) {
+        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        toast.error(`Image size (${fileSizeMB}MB) exceeds the maximum allowed size of 2MB. Please choose a smaller image.`);
+        e.target.value = ''; // Reset input
+        return;
+      }
+
       // Store the file object temporarily
       setCreateFormData(prev => ({ ...prev, image: file as unknown as string }));
 
@@ -155,6 +173,23 @@ export function BlogPostsTable() {
     const file = e.target.files?.[0];
     if (file) {
       console.log('📷 BlogPostsTable: File selected for edit:', file.name, file.size);
+
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Invalid file type. Please upload a JPEG, PNG, JPG, GIF, or SVG image.');
+        e.target.value = ''; // Reset input
+        return;
+      }
+
+      // Validate file size (2MB max)
+      const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
+      if (file.size > maxSizeInBytes) {
+        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        toast.error(`Image size (${fileSizeMB}MB) exceeds the maximum allowed size of 2MB. Please choose a smaller image.`);
+        e.target.value = ''; // Reset input
+        return;
+      }
 
       // Store the file object temporarily
       setEditFormData(prev => ({ ...prev, image: file as unknown as string }));

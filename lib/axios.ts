@@ -451,9 +451,26 @@ export const apiService = {
     console.log('📡 API Service: Upload image response status:', response.status);
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('❌ API Service: Upload image failed:', errorData);
-      throw new Error(errorData.message || 'Failed to upload image');
+      // Handle 413 Payload Too Large error
+      if (response.status === 413) {
+        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        throw new Error(`Image size (${fileSizeMB}MB) is too large. Maximum allowed size is 2MB.`);
+      }
+
+      // Try to parse error data, but handle cases where response is not JSON
+      let errorMessage = 'Failed to upload image';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch {
+        // If response is not JSON, use status-based message
+        if (response.status === 413) {
+          errorMessage = 'Image is too large. Maximum allowed size is 2MB.';
+        }
+      }
+
+      console.error('❌ API Service: Upload image failed:', errorMessage);
+      throw new Error(errorMessage);
     }
 
     const result = await response.json();

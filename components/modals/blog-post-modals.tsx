@@ -137,7 +137,7 @@ export function BlogPostModals({
                         type="file"
                         name="image"
                         onChange={onCreateFileChange}
-                        className="w-full"
+                        className="w-full cursor-pointer"
                         accept="image/*"
                         required
                       />
