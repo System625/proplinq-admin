@@ -207,6 +207,23 @@ export function BlogPostsTable() {
     console.log('🔄 BlogPostsTable: Create submit started');
     console.log('📝 BlogPostsTable: Form data:', createFormData);
 
+    // Validate form data
+    if (createFormData.title.length > 255) {
+      toast.error('Title must not exceed 255 characters');
+      setIsSubmitting(false);
+      return;
+    }
+    if (createFormData.excerpt.length > 500) {
+      toast.error('Excerpt must not exceed 500 characters');
+      setIsSubmitting(false);
+      return;
+    }
+    if (createFormData.content.length < 100) {
+      toast.error('Content must be at least 100 characters');
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       let imagePath = '';
       if (createFormData.image && typeof createFormData.image === 'object' && 'name' in createFormData.image) {
@@ -251,6 +268,23 @@ export function BlogPostsTable() {
 
     console.log('🔄 BlogPostsTable: Edit submit started');
     console.log('📝 BlogPostsTable: Edit form data:', editFormData);
+
+    // Validate form data
+    if (editFormData.title && editFormData.title.length > 255) {
+      toast.error('Title must not exceed 255 characters');
+      setIsSubmitting(false);
+      return;
+    }
+    if (editFormData.excerpt && editFormData.excerpt.length > 500) {
+      toast.error('Excerpt must not exceed 500 characters');
+      setIsSubmitting(false);
+      return;
+    }
+    if (editFormData.content && editFormData.content.length < 100) {
+      toast.error('Content must be at least 100 characters');
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       // Prepare update data

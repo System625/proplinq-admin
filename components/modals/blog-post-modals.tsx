@@ -88,7 +88,7 @@ export function BlogPostModals({
                   <div className="p-6 space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Title *
+                        Title * <span className="text-xs text-gray-500">({createFormData.title.length}/255)</span>
                       </label>
                       <Input
                         type="text"
@@ -97,13 +97,14 @@ export function BlogPostModals({
                         onChange={onCreateFormChange}
                         className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-proplinq-blue focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                         placeholder="Enter blog post title"
+                        maxLength={255}
                         required
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Excerpt *
+                        Excerpt * <span className="text-xs text-gray-500">({createFormData.excerpt.length}/500)</span>
                       </label>
                       <Textarea
                         name="excerpt"
@@ -111,20 +112,22 @@ export function BlogPostModals({
                         onChange={onCreateFormChange}
                         className="w-full min-h-[80px]"
                         placeholder="Enter a short excerpt for the blog post"
+                        maxLength={500}
                         required
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Content *
+                        Content * <span className="text-xs text-gray-500">({createFormData.content.length} characters, min 100)</span>
                       </label>
                       <Textarea
                         name="content"
                         value={createFormData.content}
                         onChange={onCreateFormChange}
                         className="w-full min-h-[200px]"
-                        placeholder="Enter the full content of the blog post"
+                        placeholder="Enter the full content of the blog post (minimum 100 characters)"
+                        minLength={100}
                         required
                       />
                     </div>
@@ -138,9 +141,12 @@ export function BlogPostModals({
                         name="image"
                         onChange={onCreateFileChange}
                         className="w-full cursor-pointer"
-                        accept="image/*"
+                        accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml"
                         required
                       />
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Accepted formats: JPEG, PNG, JPG, GIF, SVG (max 2MB)
+                      </p>
                       {createImagePreview && (
                         <div className="mt-2">
                           <div className="relative w-full h-32 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">

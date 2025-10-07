@@ -62,7 +62,7 @@ export function BlogPostEditModal({
               <div className="p-6 space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Title
+                    Title <span className="text-xs text-gray-500">({(editFormData.title || '').length}/255)</span>
                   </label>
                   <Input
                     type="text"
@@ -71,12 +71,13 @@ export function BlogPostEditModal({
                     onChange={onFormChange}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-proplinq-blue focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                     placeholder="Enter blog post title"
+                    maxLength={255}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Excerpt
+                    Excerpt <span className="text-xs text-gray-500">({(editFormData.excerpt || '').length}/500)</span>
                   </label>
                   <Textarea
                     name="excerpt"
@@ -84,19 +85,21 @@ export function BlogPostEditModal({
                     onChange={onFormChange}
                     className="w-full min-h-[80px] px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-proplinq-blue focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                     placeholder="Enter a short excerpt for the blog post"
+                    maxLength={500}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Content
+                    Content <span className="text-xs text-gray-500">({(editFormData.content || '').length} characters, min 100)</span>
                   </label>
                   <Textarea
                     name="content"
                     value={editFormData.content || ''}
                     onChange={onFormChange}
                     className="w-full min-h-[200px] px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-proplinq-blue focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    placeholder="Enter the full content of the blog post"
+                    placeholder="Enter the full content of the blog post (minimum 100 characters)"
+                    minLength={100}
                   />
                 </div>
 
@@ -109,8 +112,11 @@ export function BlogPostEditModal({
                     name="image"
                     onChange={onFileChange}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-proplinq-blue focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white cursor-pointer"
-                    accept="image/*"
+                    accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml"
                   />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Accepted formats: JPEG, PNG, JPG, GIF, SVG (max 2MB)
+                  </p>
                   {editImagePreview && (
                     <div className="mt-2">
                       <div className="relative w-full h-32 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
@@ -124,9 +130,6 @@ export function BlogPostEditModal({
                       </div>
                     </div>
                   )}
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Leave empty to keep current image
-                  </p>
                 </div>
               </div>
             </div>
