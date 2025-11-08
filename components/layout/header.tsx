@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Bell, User, Moon, Sun } from 'lucide-react';
+import { Bell, User, Moon, Sun, Shield } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,9 +35,11 @@ interface UserData {
 }
 
 export function Header({ title }: HeaderProps) {
-  const { user, logout } = useAuthStore();
+  const { user, logout, getRoleDisplayName } = useAuthStore();
   const { theme, setTheme } = useTheme();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+  const roleName = getRoleDisplayName();
 
   const handleLogout = () => {
     logout();
@@ -84,13 +87,17 @@ export function Header({ title }: HeaderProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
+                <div className="flex flex-col space-y-2">
                   <p className="text-sm font-medium leading-none">
                     {(user as UserData)?.full_name || 'Admin'}
                   </p>
                   <p className="text-xs leading-none text-muted-foreground">
                     {(user as UserData)?.email || 'admin@proplinq.com'}
                   </p>
+                  <Badge variant="secondary" className="w-fit">
+                    <Shield className="mr-1 h-3 w-3" />
+                    {roleName}
+                  </Badge>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />

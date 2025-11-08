@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { apiService } from '@/lib/axios';
 import { Transaction, PaginatedResponse, RefundRequest } from '@/types/api';
 import { toast } from 'sonner';
+import { ApiError, getErrorMessage } from '@/lib/api-error-handler';
 
 interface TransactionsState {
   transactions: Transaction[];
@@ -53,13 +54,27 @@ export const useTransactionsStore = create<TransactionsState>((set, get) => ({
       console.log('🎯 Transactions Store: State updated successfully');
     } catch (error: any) {
       console.error('❌ Transactions Store: Error in fetchTransactions:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to fetch transactions';
+
+      const errorMessage = getErrorMessage(error);
+      const isAuthError = error instanceof ApiError && error.isAuthError;
+
       set({
         transactions: [],
         error: errorMessage,
         isLoading: false,
       });
-      toast.error(errorMessage);
+
+      if (isAuthError) {
+        toast.error(errorMessage, {
+          description: 'You may need to log in again',
+          action: {
+            label: 'Login',
+            onClick: () => window.location.href = '/login',
+          },
+        });
+      } else {
+        toast.error(errorMessage);
+      }
     }
   },
 
@@ -78,9 +93,22 @@ export const useTransactionsStore = create<TransactionsState>((set, get) => ({
       toast.success(`Refund of $${data.amount} processed successfully`);
     } catch (error: any) {
       set({ isProcessingRefund: false });
-      
-      const errorMessage = error.response?.data?.message || 'Failed to process refund';
-      toast.error(errorMessage);
+
+      const errorMessage = getErrorMessage(error);
+      const isAuthError = error instanceof ApiError && error.isAuthError;
+
+      if (isAuthError) {
+        toast.error(errorMessage, {
+          description: 'You may need to log in again',
+          action: {
+            label: 'Login',
+            onClick: () => window.location.href = '/login',
+          },
+        });
+      } else {
+        toast.error(errorMessage);
+      }
+
       throw error;
     }
   },

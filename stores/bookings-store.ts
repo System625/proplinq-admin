@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { apiService } from '@/lib/axios';
 import { Booking, BookingUpdate, PaginatedResponse, RefundRequest, Transaction } from '@/types/api';
 import { toast } from 'sonner';
+import { ApiError, getErrorMessage } from '@/lib/api-error-handler';
 
 interface BookingsState {
   bookings: Booking[];
@@ -74,13 +75,27 @@ export const useBookingsStore = create<BookingsState>((set, get) => ({
       console.log('🎯 Bookings Store: State updated successfully');
     } catch (error: any) {
       console.error('❌ Bookings Store: Error in fetchBookings:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to fetch bookings';
+
+      const errorMessage = getErrorMessage(error);
+      const isAuthError = error instanceof ApiError && error.isAuthError;
+
       set({
         bookings: [],
         error: errorMessage,
         isLoading: false,
       });
-      toast.error(errorMessage);
+
+      if (isAuthError) {
+        toast.error(errorMessage, {
+          description: 'You may need to log in again',
+          action: {
+            label: 'Login',
+            onClick: () => window.location.href = '/login',
+          },
+        });
+      } else {
+        toast.error(errorMessage);
+      }
     }
   },
 
@@ -115,8 +130,20 @@ export const useBookingsStore = create<BookingsState>((set, get) => ({
       console.error('❌ Bookings Store: Update failed:', error);
       // Revert optimistic update
       set({ bookings });
-      
-      const errorMessage = error.message || 'Failed to update booking';
+
+      const errorMessage = getErrorMessage(error);
+      const isAuthError = error instanceof ApiError && error.isAuthError;
+
+      if (isAuthError) {
+        toast.error(errorMessage, {
+          description: 'You may need to log in again',
+          action: {
+            label: 'Login',
+            onClick: () => window.location.href = '/login',
+          },
+        });
+      }
+
       throw new Error(errorMessage);
     }
   },
@@ -140,7 +167,20 @@ export const useBookingsStore = create<BookingsState>((set, get) => ({
       return transaction;
     } catch (error: any) {
       console.error('❌ Bookings Store: Refund failed:', error);
-      const errorMessage = error.message || 'Failed to process refund';
+
+      const errorMessage = getErrorMessage(error);
+      const isAuthError = error instanceof ApiError && error.isAuthError;
+
+      if (isAuthError) {
+        toast.error(errorMessage, {
+          description: 'You may need to log in again',
+          action: {
+            label: 'Login',
+            onClick: () => window.location.href = '/login',
+          },
+        });
+      }
+
       throw new Error(errorMessage);
     }
   },

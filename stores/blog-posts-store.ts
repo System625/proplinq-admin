@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { apiService } from '@/lib/axios';
 import { BlogPost, BlogPostCreate, BlogPostUpdate, PaginatedResponse } from '@/types/api';
 import { toast } from 'sonner';
+import { ApiError, getErrorMessage } from '@/lib/api-error-handler';
 
 interface BlogPostsState {
   blogPosts: BlogPost[];
@@ -82,16 +83,27 @@ export const useBlogPostsStore = create<BlogPostsState>((set, get) => ({
       console.log('🔍 Blog Posts Store: Post-update verification - blog posts length:', updatedBlogPosts.length);
     } catch (error: any) {
       console.error('❌ Blog Posts Store: Error in fetchBlogPosts:', error);
-      console.error('❌ Blog Posts Store: Error response:', error.response);
-      console.error('❌ Blog Posts Store: Error response data:', error.response?.data);
 
-      const errorMessage = error.response?.data?.message || 'Failed to fetch blog posts';
+      const errorMessage = getErrorMessage(error);
+      const isAuthError = error instanceof ApiError && error.isAuthError;
+
       set({
         blogPosts: [],
         error: errorMessage,
         isLoading: false,
       });
-      toast.error(errorMessage);
+
+      if (isAuthError) {
+        toast.error(errorMessage, {
+          description: 'You may need to log in again',
+          action: {
+            label: 'Login',
+            onClick: () => window.location.href = '/login',
+          },
+        });
+      } else {
+        toast.error(errorMessage);
+      }
     }
   },
 
@@ -109,12 +121,25 @@ export const useBlogPostsStore = create<BlogPostsState>((set, get) => ({
         isLoading: false,
       });
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Failed to fetch blog post details';
+      const errorMessage = getErrorMessage(error);
+      const isAuthError = error instanceof ApiError && error.isAuthError;
+
       set({
         error: errorMessage,
         isLoading: false,
       });
-      toast.error(errorMessage);
+
+      if (isAuthError) {
+        toast.error(errorMessage, {
+          description: 'You may need to log in again',
+          action: {
+            label: 'Login',
+            onClick: () => window.location.href = '/login',
+          },
+        });
+      } else {
+        toast.error(errorMessage);
+      }
     }
   },
 
@@ -135,12 +160,26 @@ export const useBlogPostsStore = create<BlogPostsState>((set, get) => ({
 
       toast.success('Blog post created successfully');
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Failed to create blog post';
+      const errorMessage = getErrorMessage(error);
+      const isAuthError = error instanceof ApiError && error.isAuthError;
+
       set({
         error: errorMessage,
         isLoading: false,
       });
-      toast.error(errorMessage);
+
+      if (isAuthError) {
+        toast.error(errorMessage, {
+          description: 'You may need to log in again',
+          action: {
+            label: 'Login',
+            onClick: () => window.location.href = '/login',
+          },
+        });
+      } else {
+        toast.error(errorMessage);
+      }
+
       throw error;
     }
   },
@@ -167,12 +206,26 @@ export const useBlogPostsStore = create<BlogPostsState>((set, get) => ({
 
       toast.success('Blog post updated successfully');
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Failed to update blog post';
+      const errorMessage = getErrorMessage(error);
+      const isAuthError = error instanceof ApiError && error.isAuthError;
+
       set({
         error: errorMessage,
         isLoading: false,
       });
-      toast.error(errorMessage);
+
+      if (isAuthError) {
+        toast.error(errorMessage, {
+          description: 'You may need to log in again',
+          action: {
+            label: 'Login',
+            onClick: () => window.location.href = '/login',
+          },
+        });
+      } else {
+        toast.error(errorMessage);
+      }
+
       throw error;
     }
   },
@@ -195,12 +248,26 @@ export const useBlogPostsStore = create<BlogPostsState>((set, get) => ({
 
       toast.success('Blog post deleted successfully');
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Failed to delete blog post';
+      const errorMessage = getErrorMessage(error);
+      const isAuthError = error instanceof ApiError && error.isAuthError;
+
       set({
         error: errorMessage,
         isLoading: false,
       });
-      toast.error(errorMessage);
+
+      if (isAuthError) {
+        toast.error(errorMessage, {
+          description: 'You may need to log in again',
+          action: {
+            label: 'Login',
+            onClick: () => window.location.href = '/login',
+          },
+        });
+      } else {
+        toast.error(errorMessage);
+      }
+
       throw error;
     }
   },
@@ -227,12 +294,26 @@ export const useBlogPostsStore = create<BlogPostsState>((set, get) => ({
 
       toast.success('Blog post published successfully');
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Failed to publish blog post';
+      const errorMessage = getErrorMessage(error);
+      const isAuthError = error instanceof ApiError && error.isAuthError;
+
       set({
         error: errorMessage,
         isLoading: false,
       });
-      toast.error(errorMessage);
+
+      if (isAuthError) {
+        toast.error(errorMessage, {
+          description: 'You may need to log in again',
+          action: {
+            label: 'Login',
+            onClick: () => window.location.href = '/login',
+          },
+        });
+      } else {
+        toast.error(errorMessage);
+      }
+
       throw error;
     }
   },
@@ -246,9 +327,23 @@ export const useBlogPostsStore = create<BlogPostsState>((set, get) => ({
       console.log('📍 Blog Posts Store: Extracted image path:', imagePath);
       return imagePath;
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Failed to upload image';
+      const errorMessage = getErrorMessage(error);
+      const isAuthError = error instanceof ApiError && error.isAuthError;
+
       console.error('❌ Blog Posts Store: Image upload failed:', error);
-      toast.error(errorMessage);
+
+      if (isAuthError) {
+        toast.error(errorMessage, {
+          description: 'You may need to log in again',
+          action: {
+            label: 'Login',
+            onClick: () => window.location.href = '/login',
+          },
+        });
+      } else {
+        toast.error(errorMessage);
+      }
+
       throw error;
     }
   },

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { apiService } from '@/lib/axios';
 import { KycVerification, PaginatedResponse, KycReview } from '@/types/api';
 import { toast } from 'sonner';
+import { ApiError, getErrorMessage } from '@/lib/api-error-handler';
 
 interface KycState {
   verifications: KycVerification[];
@@ -101,13 +102,27 @@ export const useKycStore = create<KycState>((set, get) => ({
       console.log('🎯 KYC Store: State updated successfully');
     } catch (error: any) {
       console.error('❌ KYC Store: Error in fetchVerifications:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to fetch KYC verifications';
+
+      const errorMessage = getErrorMessage(error);
+      const isAuthError = error instanceof ApiError && error.isAuthError;
+
       set({
         verifications: [],
         error: errorMessage,
         isLoading: false,
       });
-      toast.error(errorMessage);
+
+      if (isAuthError) {
+        toast.error(errorMessage, {
+          description: 'You may need to log in again',
+          action: {
+            label: 'Login',
+            onClick: () => window.location.href = '/login',
+          },
+        });
+      } else {
+        toast.error(errorMessage);
+      }
     }
   },
 
@@ -121,12 +136,25 @@ export const useKycStore = create<KycState>((set, get) => ({
         isLoading: false,
       });
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Failed to fetch KYC verification details';
+      const errorMessage = getErrorMessage(error);
+      const isAuthError = error instanceof ApiError && error.isAuthError;
+
       set({
         error: errorMessage,
         isLoading: false,
       });
-      toast.error(errorMessage);
+
+      if (isAuthError) {
+        toast.error(errorMessage, {
+          description: 'You may need to log in again',
+          action: {
+            label: 'Login',
+            onClick: () => window.location.href = '/login',
+          },
+        });
+      } else {
+        toast.error(errorMessage);
+      }
     }
   },
 
@@ -151,9 +179,22 @@ export const useKycStore = create<KycState>((set, get) => ({
       toast.success(`KYC verification ${action} successfully`);
     } catch (error: any) {
       set({ isReviewing: false });
-      
-      const errorMessage = error.response?.data?.message || 'Failed to review KYC verification';
-      toast.error(errorMessage);
+
+      const errorMessage = getErrorMessage(error);
+      const isAuthError = error instanceof ApiError && error.isAuthError;
+
+      if (isAuthError) {
+        toast.error(errorMessage, {
+          description: 'You may need to log in again',
+          action: {
+            label: 'Login',
+            onClick: () => window.location.href = '/login',
+          },
+        });
+      } else {
+        toast.error(errorMessage);
+      }
+
       throw error;
     }
   },

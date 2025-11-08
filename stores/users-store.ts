@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { apiService } from '@/lib/axios';
 import { ApiUser, PaginatedResponse } from '@/types/api';
 import { toast } from 'sonner';
+import { ApiError, getErrorMessage } from '@/lib/api-error-handler';
 
 interface UsersState {
   users: ApiUser[];
@@ -76,16 +77,28 @@ export const useUsersStore = create<UsersState>((set, get) => ({
       console.log('🔍 Users Store: Post-update verification - users length:', updatedUsers.length);
     } catch (error: any) {
       console.error('❌ Users Store: Error in fetchUsers:', error);
-      console.error('❌ Users Store: Error response:', error.response);
-      console.error('❌ Users Store: Error response data:', error.response?.data);
-      
-      const errorMessage = error.response?.data?.message || 'Failed to fetch users';
+
+      const errorMessage = getErrorMessage(error);
+      const isAuthError = error instanceof ApiError && error.isAuthError;
+
       set({
         users: [],
         error: errorMessage,
         isLoading: false,
       });
-      toast.error(errorMessage);
+
+      // Show appropriate toast based on error type
+      if (isAuthError) {
+        toast.error(errorMessage, {
+          description: 'You may need to log in again',
+          action: {
+            label: 'Login',
+            onClick: () => window.location.href = '/login',
+          },
+        });
+      } else {
+        toast.error(errorMessage);
+      }
     }
   },
 
@@ -104,12 +117,25 @@ export const useUsersStore = create<UsersState>((set, get) => ({
         isLoading: false,
       });
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Failed to fetch user details';
+      const errorMessage = getErrorMessage(error);
+      const isAuthError = error instanceof ApiError && error.isAuthError;
+
       set({
         error: errorMessage,
         isLoading: false,
       });
-      toast.error(errorMessage);
+
+      if (isAuthError) {
+        toast.error(errorMessage, {
+          description: 'You may need to log in again',
+          action: {
+            label: 'Login',
+            onClick: () => window.location.href = '/login',
+          },
+        });
+      } else {
+        toast.error(errorMessage);
+      }
     }
   },
 

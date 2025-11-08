@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { apiService } from '@/lib/axios';
 import { DashboardStats } from '@/types/api';
 import { toast } from 'sonner';
+import { ApiError, getErrorMessage } from '@/lib/api-error-handler';
 
 interface DashboardState {
   stats: DashboardStats | null;
@@ -30,12 +31,26 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       });
     } catch (error: any) {
       console.error('Dashboard stats fetch error:', error); // Debug log
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch dashboard stats';
-      set({ 
+
+      const errorMessage = getErrorMessage(error);
+      const isAuthError = error instanceof ApiError && error.isAuthError;
+
+      set({
         error: errorMessage,
-        isLoading: false 
+        isLoading: false
       });
-      toast.error(`Dashboard Error: ${errorMessage}`);
+
+      if (isAuthError) {
+        toast.error(errorMessage, {
+          description: 'You may need to log in again',
+          action: {
+            label: 'Login',
+            onClick: () => window.location.href = '/login',
+          },
+        });
+      } else {
+        toast.error(`Dashboard Error: ${errorMessage}`);
+      }
     }
   },
 

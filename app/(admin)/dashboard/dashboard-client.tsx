@@ -171,27 +171,32 @@ export function DashboardClient({
             <StatCard
               title="Total Users"
               value={(stats.users.total || 0).toLocaleString()}
-              icon={<Users className="h-4 w-4" />}
+              icon={Users}
+              iconClassName="h-4 w-4"
             />
             <StatCard
               title="Agents"
               value={(stats.users.by_role.agent || 0).toLocaleString()}
-              icon={<Briefcase className="h-4 w-4" />}
+              icon={Briefcase}
+              iconClassName="h-4 w-4"
             />            
             <StatCard
               title="Admins"
               value={(stats.users.by_role.admin || 0).toLocaleString()}
-              icon={<UserCog className="h-4 w-4" />}
+              icon={UserCog}
+              iconClassName="h-4 w-4"
             />
             <StatCard
               title="New This Month"
               value={(stats.users.new_this_month || 0).toLocaleString()}
-              icon={<UserPlus className="h-4 w-4" />}
+              icon={UserPlus}
+              iconClassName="h-4 w-4"
             />
             <StatCard
               title="Home Seekers"
               value={(stats.users.by_role.home_seeker || 0).toLocaleString()}
-              icon={<UserSquare className="h-4 w-4" />}
+              icon={UserSquare}
+              iconClassName="h-4 w-4"
             />
           </div>
           <div>
@@ -213,22 +218,26 @@ export function DashboardClient({
             <StatCard
               title="Total Properties"
               value={(stats.properties.total || 0).toLocaleString()}
-              icon={<Home className="h-4 w-4" />}
+              icon={Home}
+              iconClassName="h-4 w-4"
             />
             <StatCard
               title="Available"
               value={(stats.properties.available || 0).toLocaleString()}
-              icon={<Building className="h-4 w-4" />}
+              icon={Building}
+              iconClassName="h-4 w-4"
             />
             <StatCard
               title="Rented"
               value={(stats.properties.rented || 0).toLocaleString()}
-              icon={<BadgePercent className="h-4 w-4" />}
+              icon={BadgePercent}
+              iconClassName="h-4 w-4"
             />
             <StatCard
               title="Sold"
               value={(stats.properties.sold || 0).toLocaleString()}
-              icon={<CircleDollarSign className="h-4 w-4" />}
+              icon={CircleDollarSign}
+              iconClassName="h-4 w-4"
             />
           </div>
           <div>
@@ -250,17 +259,20 @@ export function DashboardClient({
             <StatCard
               title="Pending"
               value={(stats.kyc.pending || 0).toLocaleString()}
-              icon={<FileClock className="h-4 w-4" />}
+              icon={FileClock}
+              iconClassName="h-4 w-4"
             />
             <StatCard
               title="Approved"
               value={(stats.kyc.approved || 0).toLocaleString()}
-              icon={<FileCheck className="h-4 w-4" />}
+              icon={FileCheck}
+              iconClassName="h-4 w-4"
             />
             <StatCard
               title="Rejected"
               value={(stats.kyc.rejected || 0).toLocaleString()}
-              icon={<FileX className="h-4 w-4" />}
+              icon={FileX}
+              iconClassName="h-4 w-4"
             />
           </div>
           <div>
@@ -281,17 +293,20 @@ export function DashboardClient({
           <StatCard
             title="Active Loans"
             value={(stats.rnpl.active_loans || 0).toLocaleString()}
-            icon={<Landmark className="h-4 w-4" />}
+            icon={Landmark}
+            iconClassName="h-4 w-4"
           />
           <StatCard
             title="Pending Applications"
             value={(stats.rnpl.pending_applications || 0).toLocaleString()}
-            icon={<FileClock className="h-4 w-4" />}
+            icon={FileClock}
+            iconClassName="h-4 w-4"
           />
           <StatCard
             title="Total Value"
             value={formatCurrency(stats.rnpl.total_value || 0)}
-            icon={<CircleDollarSign className="h-4 w-4" />}
+            icon={CircleDollarSign}
+            iconClassName="h-4 w-4"
           />
         </CardContent>
       </Card>

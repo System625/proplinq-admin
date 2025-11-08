@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuthStore } from '@/stores/auth-store';
+import { MOCK_USERS } from '@/lib/mock-users';
+import { Info } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -39,7 +41,9 @@ export default function LoginPage() {
       try {
         initAuth();
         if (checkAuth()) {
-          router.push('/dashboard');
+          // Redirect to user's role-specific dashboard
+          const defaultDashboard = useAuthStore.getState().getDefaultDashboard();
+          router.push(defaultDashboard);
           return;
         }
         setShouldShowLogin(true);
@@ -57,7 +61,10 @@ export default function LoginPage() {
   async function onSubmit(values: LoginForm) {
     try {
       await login(values);
-      router.push('/dashboard');
+
+      // Get the user's default dashboard based on their role
+      const defaultDashboard = useAuthStore.getState().getDefaultDashboard();
+      router.push(defaultDashboard);
     } catch {
       // Error handling is now done in the auth store with toast notifications
     }
@@ -140,8 +147,8 @@ export default function LoginPage() {
               />
 
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-proplinq-blue hover:bg-proplinq-blue/90"
                 disabled={isLoading}
               >
@@ -149,6 +156,28 @@ export default function LoginPage() {
               </Button>
             </form>
           </Form>
+
+          {/* Dev Credentials Hint - Only in Development */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <div className="flex items-start gap-2">
+                <Info className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-amber-900 dark:text-amber-100">
+                    Test Credentials (Dev Only)
+                  </p>
+                  <div className="space-y-1 text-xs text-amber-700 dark:text-amber-300">
+                    {MOCK_USERS.map((user) => (
+                      <div key={user.email} className="font-mono">
+                        <span className="font-semibold">{user.displayName}:</span>{' '}
+                        {user.email} / {user.password}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
