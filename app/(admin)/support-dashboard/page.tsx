@@ -1,7 +1,17 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Headphones, MessageSquare, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import {
+  Headphones,
+  MessageSquare,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  Calendar,
+  Search,
+  CreditCard,
+  UserCircle,
+} from 'lucide-react';
 import { useSupportDashboardStore } from '@/stores/support-dashboard-store';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -17,8 +27,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { format } from 'date-fns';
+import { DashboardSearch } from '@/components/shared/dashboard-search';
+import { EscalateIssueDialog } from '@/components/shared/escalate-issue-dialog';
 
 export default function SupportDashboardPage() {
   return (
@@ -40,18 +59,35 @@ export default function SupportDashboardPage() {
 }
 
 function SupportDashboardClient() {
-  const { stats, tickets, chats, chartData, isLoading, fetchDashboardData, refreshTickets } =
-    useSupportDashboardStore();
+  const {
+    stats,
+    chats,
+    chartData,
+    isLoading,
+    fetchDashboardData,
+    refreshTickets,
+    searchQuery,
+    categoryFilter,
+    statusFilter,
+    priorityFilter,
+    setSearchQuery,
+    setCategoryFilter,
+    setStatusFilter,
+    setPriorityFilter,
+    getFilteredTickets,
+  } = useSupportDashboardStore();
 
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
+  const filteredTickets = getFilteredTickets();
+
   if (isLoading && !stats) {
     return (
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 8 }).map((_, i) => (
             <Skeleton key={i} className="h-32" />
           ))}
         </div>
@@ -93,6 +129,50 @@ function SupportDashboardClient() {
           trend="up"
         />
       </div>
+
+      {/* Category Breakdown */}
+      {stats.categoryBreakdown && (
+        <div>
+          <h2 className="text-lg font-semibold mb-4">Category Breakdown</h2>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+            <StatCard
+              title="Booking Issues"
+              value={stats.categoryBreakdown.bookingIssues.toString()}
+              icon={Calendar}
+              description="Booking-related tickets"
+              iconClassName="bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300"
+            />
+            <StatCard
+              title="Search Issues"
+              value={stats.categoryBreakdown.searchIssues.toString()}
+              icon={Search}
+              description="Search-related tickets"
+              iconClassName="bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300"
+            />
+            <StatCard
+              title="KYC Issues"
+              value={stats.categoryBreakdown.kycIssues.toString()}
+              icon={AlertCircle}
+              description="KYC-related tickets"
+              iconClassName="bg-amber-100 text-amber-600 dark:bg-amber-900 dark:text-amber-300"
+            />
+            <StatCard
+              title="Payment Issues"
+              value={stats.categoryBreakdown.paymentIssues.toString()}
+              icon={CreditCard}
+              description="Payment-related tickets"
+              iconClassName="bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300"
+            />
+            <StatCard
+              title="Profile Issues"
+              value={stats.categoryBreakdown.profileIssues.toString()}
+              icon={UserCircle}
+              description="Profile-related tickets"
+              iconClassName="bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Performance Metrics */}
       <div className="grid gap-6 md:grid-cols-3">
@@ -156,16 +236,68 @@ function SupportDashboardClient() {
 
       {/* Recent Tickets Table */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Recent Tickets</CardTitle>
-            <CardDescription>Latest customer support tickets</CardDescription>
+        <CardHeader>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle>Recent Tickets</CardTitle>
+              <CardDescription>
+                Latest customer support tickets ({filteredTickets.length} results)
+              </CardDescription>
+            </div>
+            <Button variant="outline" size="sm" onClick={refreshTickets}>
+              Refresh
+            </Button>
           </div>
-          <Button variant="outline" size="sm" onClick={refreshTickets}>
-            Refresh
-          </Button>
         </CardHeader>
         <CardContent>
+          {/* Search and Filters */}
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end">
+            <DashboardSearch
+              placeholder="Search by ticket ID, username, or title..."
+              onSearch={setSearchQuery}
+              defaultValue={searchQuery}
+            />
+            <div className="flex gap-2">
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="booking">Booking</SelectItem>
+                  <SelectItem value="search">Search</SelectItem>
+                  <SelectItem value="kyc">KYC</SelectItem>
+                  <SelectItem value="payment">Payment</SelectItem>
+                  <SelectItem value="profile">Profile</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="in-progress">In Progress</SelectItem>
+                  <SelectItem value="resolved">Resolved</SelectItem>
+                  <SelectItem value="closed">Closed</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                <SelectTrigger className="w-[130px]">
+                  <SelectValue placeholder="Priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Priority</SelectItem>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <Table>
             <TableHeader>
               <TableRow>
@@ -176,50 +308,66 @@ function SupportDashboardClient() {
                 <TableHead>Priority</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Created</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tickets.slice(0, 10).map((ticket) => (
-                <TableRow key={ticket.id}>
-                  <TableCell className="font-mono text-sm">{ticket.id}</TableCell>
-                  <TableCell className="max-w-xs truncate">{ticket.title}</TableCell>
-                  <TableCell>{ticket.user}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="capitalize">
-                      {ticket.category}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        ticket.priority === 'urgent' || ticket.priority === 'high'
-                          ? 'destructive'
-                          : 'secondary'
-                      }
-                      className="capitalize"
-                    >
-                      {ticket.priority}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        ticket.status === 'pending'
-                          ? 'secondary'
-                          : ticket.status === 'in-progress'
-                          ? 'default'
-                          : 'outline'
-                      }
-                      className="capitalize"
-                    >
-                      {ticket.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {format(new Date(ticket.created_at), 'MMM d, HH:mm')}
+              {filteredTickets.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                    No tickets found matching your filters
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                filteredTickets.slice(0, 10).map((ticket) => (
+                  <TableRow key={ticket.id}>
+                    <TableCell className="font-mono text-sm">{ticket.id}</TableCell>
+                    <TableCell className="max-w-xs truncate">{ticket.title}</TableCell>
+                    <TableCell>{ticket.user}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="capitalize">
+                        {ticket.category}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          ticket.priority === 'urgent' || ticket.priority === 'high'
+                            ? 'destructive'
+                            : 'secondary'
+                        }
+                        className="capitalize"
+                      >
+                        {ticket.priority}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          ticket.status === 'pending'
+                            ? 'secondary'
+                            : ticket.status === 'in-progress'
+                            ? 'default'
+                            : 'outline'
+                        }
+                        className="capitalize"
+                      >
+                        {ticket.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {format(new Date(ticket.created_at), 'MMM d, HH:mm')}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <EscalateIssueDialog
+                        issueId={ticket.id}
+                        issueType="ticket"
+                        fromDepartment="support"
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>

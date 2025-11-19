@@ -233,3 +233,108 @@ export interface BlogPostCreate {
 }
 
 export interface BlogPostUpdate extends Partial<BlogPostCreate> {}
+
+// ==========================================
+// ENHANCED DASHBOARD TYPES
+// ==========================================
+
+// Support Dashboard with Category Breakdown
+export interface SupportTicketCategories {
+  bookingIssues: number;
+  searchIssues: number;
+  kycIssues: number;
+  paymentIssues: number;
+  profileIssues: number;
+}
+
+export interface EnhancedSupportDashboardStats {
+  totalTickets: number;
+  pendingTickets: number;
+  inProgressTickets: number;
+  resolvedToday: number;
+  activeChats: number;
+  avgResponseTime: string;
+  satisfactionRate: number;
+  categoryBreakdown: SupportTicketCategories;
+}
+
+// Operations Dashboard with comprehensive metrics
+export interface OperationsListingsStats {
+  active: number;
+  pending: number;
+  rejected: number;
+}
+
+export interface OperationsKycOverview {
+  pendingKyc: number;
+  approvedToday: number;
+}
+
+export interface OperationsBookingsStats {
+  today: number;
+  thisWeek: number;
+}
+
+export interface OperationsTicketsSummary {
+  openTickets: number;
+  inProgressTickets: number;
+  resolvedToday: number;
+}
+
+export interface OperationsSalesMetrics {
+  newAgentsThisWeek: number;
+  newAgentsThisMonth: number;
+  newPropertiesOnboarded: number;
+  bigAccountsClosed: {
+    hotels: number;
+    servicedApartments: number;
+    estates: number;
+  };
+  subscriptionSales: {
+    month: string;
+    amount: number;
+  }[];
+  revenueFromCommissions: number;
+  dealsInPipeline: number;
+  agentActivityScore: number;
+  agentEngagementRate: number;
+}
+
+export interface EnhancedOperationsDashboardStats {
+  // Existing subscription metrics
+  totalSubscriptions: number;
+  activeSubscriptions: number;
+  pendingSubscriptions: number;
+  cancelledThisMonth: number;
+  totalRevenue: number;
+  monthlyRevenue: number;
+  walletBalance: number;
+  pendingPayouts: number;
+  // New metrics
+  listings: OperationsListingsStats;
+  kycOverview: OperationsKycOverview;
+  bookings: OperationsBookingsStats;
+  ticketsSummary: OperationsTicketsSummary;
+  salesMetrics: OperationsSalesMetrics;
+}
+
+// Escalation Feature
+export interface EscalationRequest {
+  issueId: string;
+  issueType: 'ticket' | 'lead' | 'booking' | 'kyc' | 'general';
+  fromDepartment: 'support' | 'sales' | 'marketing' | 'operations';
+  toDepartment: 'support' | 'sales' | 'marketing' | 'operations';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  subject: string;
+  description: string;
+  metadata?: Record<string, any>;
+}
+
+export interface EscalationResponse {
+  id: string;
+  escalationRequest: EscalationRequest;
+  status: 'pending' | 'acknowledged' | 'in-progress' | 'resolved';
+  assignedTo?: string;
+  createdAt: string;
+  updatedAt: string;
+}

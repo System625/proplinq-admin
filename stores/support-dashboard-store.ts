@@ -17,21 +17,35 @@ interface SupportDashboardState {
   chartData: ChartDataPoint[];
   isLoading: boolean;
   error: string | null;
+  // Search and filter state
+  searchQuery: string;
+  categoryFilter: string;
+  statusFilter: string;
+  priorityFilter: string;
 
   // Actions
   fetchDashboardData: () => Promise<void>;
   refreshTickets: () => void;
   refreshChats: () => void;
   clearError: () => void;
+  setSearchQuery: (query: string) => void;
+  setCategoryFilter: (category: string) => void;
+  setStatusFilter: (status: string) => void;
+  setPriorityFilter: (priority: string) => void;
+  getFilteredTickets: () => MockTicket[];
 }
 
-export const useSupportDashboardStore = create<SupportDashboardState>((set) => ({
+export const useSupportDashboardStore = create<SupportDashboardState>((set, get) => ({
   stats: null,
   tickets: [],
   chats: [],
   chartData: [],
   isLoading: false,
   error: null,
+  searchQuery: '',
+  categoryFilter: 'all',
+  statusFilter: 'all',
+  priorityFilter: 'all',
 
   fetchDashboardData: async () => {
     set({ isLoading: true, error: null });
@@ -72,5 +86,60 @@ export const useSupportDashboardStore = create<SupportDashboardState>((set) => (
 
   clearError: () => {
     set({ error: null });
+  },
+
+  setSearchQuery: (query: string) => {
+    set({ searchQuery: query });
+  },
+
+  setCategoryFilter: (category: string) => {
+    set({ categoryFilter: category });
+  },
+
+  setStatusFilter: (status: string) => {
+    set({ statusFilter: status });
+  },
+
+  setPriorityFilter: (priority: string) => {
+    set({ priorityFilter: priority });
+  },
+
+  getFilteredTickets: () => {
+    const state = get();
+    let filtered = state.tickets;
+
+    // Apply search query
+    if (state.searchQuery) {
+      const query = state.searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (ticket) =>
+          ticket.id.toLowerCase().includes(query) ||
+          ticket.user.toLowerCase().includes(query) ||
+          ticket.title.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply category filter
+    if (state.categoryFilter && state.categoryFilter !== 'all') {
+      filtered = filtered.filter(
+        (ticket) => ticket.category === state.categoryFilter
+      );
+    }
+
+    // Apply status filter
+    if (state.statusFilter && state.statusFilter !== 'all') {
+      filtered = filtered.filter(
+        (ticket) => ticket.status === state.statusFilter
+      );
+    }
+
+    // Apply priority filter
+    if (state.priorityFilter && state.priorityFilter !== 'all') {
+      filtered = filtered.filter(
+        (ticket) => ticket.priority === state.priorityFilter
+      );
+    }
+
+    return filtered;
   },
 }));

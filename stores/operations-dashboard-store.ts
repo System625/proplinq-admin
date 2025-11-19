@@ -17,21 +17,30 @@ interface OperationsDashboardState {
   revenueChart: ChartDataPoint[];
   isLoading: boolean;
   error: string | null;
+  // Separate search state for each table
+  subscriptionSearchQuery: string;
+  transactionSearchQuery: string;
 
   // Actions
   fetchDashboardData: () => Promise<void>;
   refreshSubscriptions: () => void;
   refreshTransactions: () => void;
   clearError: () => void;
+  setSubscriptionSearchQuery: (query: string) => void;
+  setTransactionSearchQuery: (query: string) => void;
+  getFilteredSubscriptions: () => MockSubscription[];
+  getFilteredTransactions: () => MockWalletTransaction[];
 }
 
-export const useOperationsDashboardStore = create<OperationsDashboardState>((set) => ({
+export const useOperationsDashboardStore = create<OperationsDashboardState>((set, get) => ({
   stats: null,
   subscriptions: [],
   transactions: [],
   revenueChart: [],
   isLoading: false,
   error: null,
+  subscriptionSearchQuery: '',
+  transactionSearchQuery: '',
 
   fetchDashboardData: async () => {
     set({ isLoading: true, error: null });
@@ -72,5 +81,39 @@ export const useOperationsDashboardStore = create<OperationsDashboardState>((set
 
   clearError: () => {
     set({ error: null });
+  },
+
+  setSubscriptionSearchQuery: (query: string) => {
+    set({ subscriptionSearchQuery: query });
+  },
+
+  setTransactionSearchQuery: (query: string) => {
+    set({ transactionSearchQuery: query });
+  },
+
+  getFilteredSubscriptions: () => {
+    const state = get();
+    if (!state.subscriptionSearchQuery) return state.subscriptions;
+
+    const query = state.subscriptionSearchQuery.toLowerCase();
+    return state.subscriptions.filter(
+      (sub) =>
+        sub.id.toLowerCase().includes(query) ||
+        sub.partner.toLowerCase().includes(query) ||
+        sub.plan.toLowerCase().includes(query)
+    );
+  },
+
+  getFilteredTransactions: () => {
+    const state = get();
+    if (!state.transactionSearchQuery) return state.transactions;
+
+    const query = state.transactionSearchQuery.toLowerCase();
+    return state.transactions.filter(
+      (tx) =>
+        tx.id.toLowerCase().includes(query) ||
+        tx.user.toLowerCase().includes(query) ||
+        tx.type.toLowerCase().includes(query)
+    );
   },
 }));

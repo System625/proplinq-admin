@@ -30,7 +30,7 @@ export interface MockTicket {
   user: string;
   status: 'pending' | 'in-progress' | 'resolved' | 'closed';
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  category: 'technical' | 'billing' | 'booking' | 'kyc' | 'general';
+  category: 'booking' | 'search' | 'kyc' | 'payment' | 'profile';
   created_at: string;
   updated_at: string;
 }
@@ -51,6 +51,13 @@ export interface SupportDashboardStats {
   activeChats: number;
   avgResponseTime: string;
   satisfactionRate: number;
+  categoryBreakdown?: {
+    bookingIssues: number;
+    searchIssues: number;
+    kycIssues: number;
+    paymentIssues: number;
+    profileIssues: number;
+  };
 }
 
 export function generateSupportStats(): SupportDashboardStats {
@@ -62,6 +69,13 @@ export function generateSupportStats(): SupportDashboardStats {
     activeChats: randomInt(5, 15),
     avgResponseTime: `${randomInt(2, 8)} min`,
     satisfactionRate: randomInt(85, 98),
+    categoryBreakdown: {
+      bookingIssues: randomInt(30, 80),
+      searchIssues: randomInt(20, 50),
+      kycIssues: randomInt(25, 60),
+      paymentIssues: randomInt(15, 45),
+      profileIssues: randomInt(10, 35),
+    },
   };
 }
 
@@ -98,7 +112,7 @@ export function generateMockTickets(count: number = 10): MockTicket[] {
     user: randomPick(users),
     status: randomPick(['pending', 'in-progress', 'resolved', 'closed']),
     priority: randomPick(['low', 'medium', 'high', 'urgent']),
-    category: randomPick(['technical', 'billing', 'booking', 'kyc', 'general']),
+    category: randomPick(['booking', 'search', 'kyc', 'payment', 'profile']),
     created_at: randomDate(30),
     updated_at: randomDate(5),
   }));
@@ -162,6 +176,42 @@ export interface OperationsDashboardStats {
   monthlyRevenue: number;
   walletBalance: number;
   pendingPayouts: number;
+  listings?: {
+    active: number;
+    pending: number;
+    rejected: number;
+  };
+  kycOverview?: {
+    pendingKyc: number;
+    approvedToday: number;
+  };
+  bookings?: {
+    today: number;
+    thisWeek: number;
+  };
+  ticketsSummary?: {
+    openTickets: number;
+    inProgressTickets: number;
+    resolvedToday: number;
+  };
+  salesMetrics?: {
+    newAgentsThisWeek: number;
+    newAgentsThisMonth: number;
+    newPropertiesOnboarded: number;
+    bigAccountsClosed: {
+      hotels: number;
+      servicedApartments: number;
+      estates: number;
+    };
+    subscriptionSales: {
+      month: string;
+      amount: number;
+    }[];
+    revenueFromCommissions: number;
+    dealsInPipeline: number;
+    agentActivityScore: number;
+    agentEngagementRate: number;
+  };
 }
 
 export function generateOperationsStats(): OperationsDashboardStats {
@@ -174,6 +224,46 @@ export function generateOperationsStats(): OperationsDashboardStats {
     monthlyRevenue: randomInt(50000, 150000),
     walletBalance: randomInt(100000, 500000),
     pendingPayouts: randomInt(20000, 80000),
+    listings: {
+      active: randomInt(500, 1500),
+      pending: randomInt(50, 150),
+      rejected: randomInt(20, 80),
+    },
+    kycOverview: {
+      pendingKyc: randomInt(30, 100),
+      approvedToday: randomInt(5, 25),
+    },
+    bookings: {
+      today: randomInt(10, 50),
+      thisWeek: randomInt(80, 250),
+    },
+    ticketsSummary: {
+      openTickets: randomInt(20, 60),
+      inProgressTickets: randomInt(10, 30),
+      resolvedToday: randomInt(15, 40),
+    },
+    salesMetrics: {
+      newAgentsThisWeek: randomInt(5, 20),
+      newAgentsThisMonth: randomInt(20, 80),
+      newPropertiesOnboarded: randomInt(30, 100),
+      bigAccountsClosed: {
+        hotels: randomInt(2, 10),
+        servicedApartments: randomInt(3, 15),
+        estates: randomInt(1, 8),
+      },
+      subscriptionSales: [
+        { month: 'Jan', amount: randomInt(50000, 150000) },
+        { month: 'Feb', amount: randomInt(50000, 150000) },
+        { month: 'Mar', amount: randomInt(50000, 150000) },
+        { month: 'Apr', amount: randomInt(50000, 150000) },
+        { month: 'May', amount: randomInt(50000, 150000) },
+        { month: 'Jun', amount: randomInt(50000, 150000) },
+      ],
+      revenueFromCommissions: randomInt(200000, 800000),
+      dealsInPipeline: randomInt(15, 50),
+      agentActivityScore: randomInt(70, 95),
+      agentEngagementRate: randomInt(65, 90),
+    },
   };
 }
 
