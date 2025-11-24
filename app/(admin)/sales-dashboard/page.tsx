@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { UserPlus, Building, Clock, Users } from 'lucide-react';
+import { UserPlus, Building, Clock, Users, AlertCircle } from 'lucide-react';
 import { useSalesDashboardStore } from '@/stores/sales-dashboard-store';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,6 +18,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { format } from 'date-fns';
+import { EscalateIssueDialog } from '@/components/shared/escalate-issue-dialog';
 
 export default function SalesDashboardPage() {
   return (
@@ -200,9 +201,21 @@ function SalesDashboardClient() {
                     {format(new Date(lead.created_at), 'MMM d, yyyy')}
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm">
-                      Manage
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="sm">
+                        Manage
+                      </Button>
+                      <EscalateIssueDialog
+                        issueId={lead.id}
+                        issueType="lead"
+                        fromDepartment="sales"
+                        trigger={
+                          <Button variant="ghost" size="sm">
+                            <AlertCircle className="h-4 w-4" />
+                          </Button>
+                        }
+                      />
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -229,6 +242,7 @@ function SalesDashboardClient() {
                 <TableHead>Revenue</TableHead>
                 <TableHead>KYC Status</TableHead>
                 <TableHead>Last Active</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -262,6 +276,18 @@ function SalesDashboardClient() {
                   </TableCell>
                   <TableCell className="text-sm">
                     {format(new Date(partner.last_active), 'MMM d, yyyy')}
+                  </TableCell>
+                  <TableCell>
+                    <EscalateIssueDialog
+                      issueId={partner.id}
+                      issueType="general"
+                      fromDepartment="sales"
+                      trigger={
+                        <Button variant="ghost" size="sm">
+                          <AlertCircle className="h-4 w-4" />
+                        </Button>
+                      }
+                    />
                   </TableCell>
                 </TableRow>
               ))}

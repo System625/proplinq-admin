@@ -1,4 +1,4 @@
-import { LoginCredentials, ApiLoginResponse, DashboardStats, ApiUser, Booking, BookingUpdate, Transaction, KycVerification, RefundRequest, KycReview, PaginatedResponse, BlogPost, BlogPostCreate, BlogPostUpdate } from '@/types/api';
+import { LoginCredentials, ApiLoginResponse, DashboardStats, ApiUser, Booking, BookingUpdate, Transaction, KycVerification, RefundRequest, KycReview, PaginatedResponse, BlogPost, BlogPostCreate, BlogPostUpdate, EscalationRequest, EscalationResponse } from '@/types/api';
 
 // Production API service
 export const apiService = {
@@ -506,6 +506,94 @@ export const apiService = {
 
     const result = await response.json();
     console.log('✅ API Service: Publish blog post successful:', result);
+    return result;
+  },
+
+  // Escalations
+  async createEscalation(data: EscalationRequest): Promise<EscalationResponse> {
+    console.log('🔄 API Service: Creating escalation with data:', data);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('proplinq_admin_token') : null;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch('/api/escalations', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data),
+    });
+
+    console.log('📡 API Service: Create escalation response status:', response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('❌ API Service: Create escalation failed:', errorData);
+      throw new Error(errorData.message || 'Failed to create escalation');
+    }
+
+    const result = await response.json();
+    console.log('✅ API Service: Create escalation successful:', result);
+    return result;
+  },
+
+  async getEscalations(params?: Record<string, unknown>): Promise<PaginatedResponse<EscalationResponse>> {
+    console.log('🔄 API Service: Fetching escalations with params:', params);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('proplinq_admin_token') : null;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const queryString = params ? new URLSearchParams(params as Record<string, string>).toString() : '';
+    const url = queryString ? `/api/escalations?${queryString}` : '/api/escalations';
+
+    const response = await fetch(url, { headers });
+    console.log('📡 API Service: Escalations response status:', response.status);
+
+    if (!response.ok) {
+      console.error('❌ API Service: Escalations failed with status:', response.status);
+      throw new Error('Failed to fetch escalations');
+    }
+
+    const data = await response.json();
+    console.log('📊 API Service: Escalations data:', data);
+    return data;
+  },
+
+  async updateEscalation(id: string, data: Partial<EscalationResponse>): Promise<EscalationResponse> {
+    console.log('🔄 API Service: Updating escalation', id, 'with data:', data);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('proplinq_admin_token') : null;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`/api/escalations/${id}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify(data),
+    });
+
+    console.log('📡 API Service: Update escalation response status:', response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('❌ API Service: Update escalation failed:', errorData);
+      throw new Error(errorData.message || 'Failed to update escalation');
+    }
+
+    const result = await response.json();
+    console.log('✅ API Service: Update escalation successful:', result);
     return result;
   },
 };
