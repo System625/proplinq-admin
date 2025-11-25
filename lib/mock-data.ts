@@ -184,6 +184,7 @@ export interface OperationsDashboardStats {
   kycOverview?: {
     pendingKyc: number;
     approvedToday: number;
+    totalVerified: number;
   };
   bookings?: {
     today: number;
@@ -234,6 +235,7 @@ export function generateOperationsStats(): OperationsDashboardStats {
     kycOverview: {
       pendingKyc: randomInt(30, 100),
       approvedToday: randomInt(5, 25),
+      totalVerified: randomInt(500, 2000),
     },
     bookings: {
       today: randomInt(10, 50),

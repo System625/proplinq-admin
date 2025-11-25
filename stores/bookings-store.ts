@@ -3,6 +3,7 @@ import { apiService } from '@/lib/axios';
 import { Booking, BookingUpdate, PaginatedResponse, RefundRequest, Transaction } from '@/types/api';
 import { toast } from 'sonner';
 import { ApiError, getErrorMessage } from '@/lib/api-error-handler';
+import { generateOperationsStats } from '@/lib/mock-data';
 
 interface BookingsState {
   bookings: Booking[];
@@ -12,13 +13,20 @@ interface BookingsState {
     total: number;
     totalPages: number;
   } | null;
+  statistics: {
+    today: number;
+    thisWeek: number;
+    thisMonth: number;
+    allTime: number;
+  } | null;
   isLoading: boolean;
   error: string | null;
   statusFilter: string;
   searchTerm: string;
-  
+
   // Actions
   fetchBookings: (params?: { page?: number; limit?: number; status?: string; search?: string }) => Promise<void>;
+  fetchStatistics: () => Promise<void>;
   updateBooking: (id: string, data: Partial<Booking>) => Promise<void>;
   processRefund: (bookingId: string, amount: number, reason: string) => Promise<Transaction>;
   setStatusFilter: (status: string) => void;
@@ -29,6 +37,7 @@ interface BookingsState {
 export const useBookingsStore = create<BookingsState>((set, get) => ({
   bookings: [],
   pagination: null,
+  statistics: null,
   isLoading: false,
   error: null,
   statusFilter: 'all',
@@ -182,6 +191,30 @@ export const useBookingsStore = create<BookingsState>((set, get) => ({
       }
 
       throw new Error(errorMessage);
+    }
+  },
+
+  fetchStatistics: async () => {
+    try {
+      // Simulate API call - using mock data until backend endpoint is ready
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const stats = generateOperationsStats();
+
+      if (stats.bookings) {
+        set({
+          statistics: {
+            today: stats.bookings.today,
+            thisWeek: stats.bookings.thisWeek,
+            thisMonth: stats.bookings.thisMonth,
+            allTime: stats.bookings.allTime,
+          },
+        });
+      }
+    } catch (error: any) {
+      console.error('❌ Bookings Store: Failed to fetch statistics:', error);
+      const errorMessage = getErrorMessage(error);
+      toast.error(errorMessage);
     }
   },
 

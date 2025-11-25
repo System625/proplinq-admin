@@ -165,7 +165,7 @@ function OperationsDashboardClient() {
       {stats.kycOverview && (
         <div>
           <h2 className="text-lg font-semibold mb-4">KYC Overview</h2>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <StatCard
               title="Pending KYC"
               value={stats.kycOverview.pendingKyc.toString()}
@@ -180,6 +180,13 @@ function OperationsDashboardClient() {
               description="Verified today"
               trend="up"
               iconClassName="bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300"
+            />
+            <StatCard
+              title="Total KYC Verified"
+              value={stats.kycOverview.totalVerified.toString()}
+              icon={UserCheck}
+              description="All-time verified"
+              iconClassName="bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300"
             />
           </div>
         </div>
