@@ -189,7 +189,7 @@ function OperationsDashboardClient() {
       {stats.bookings && (
         <div>
           <h2 className="text-lg font-semibold mb-4">Total Bookings</h2>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <StatCard
               title="Bookings Today"
               value={stats.bookings.today.toString()}
@@ -204,6 +204,20 @@ function OperationsDashboardClient() {
               description="Booked this week"
               trend="up"
               iconClassName="bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300"
+            />
+            <StatCard
+              title="Monthly Bookings"
+              value={stats.bookings.thisMonth.toString()}
+              icon={Calendar}
+              description="Booked this month"
+              iconClassName="bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300"
+            />
+            <StatCard
+              title="Total Bookings (All-Time)"
+              value={stats.bookings.allTime.toLocaleString()}
+              icon={Calendar}
+              description="All bookings"
+              iconClassName="bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300"
             />
           </div>
         </div>

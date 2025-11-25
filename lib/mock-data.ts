@@ -188,6 +188,8 @@ export interface OperationsDashboardStats {
   bookings?: {
     today: number;
     thisWeek: number;
+    thisMonth: number;
+    allTime: number;
   };
   ticketsSummary?: {
     openTickets: number;
@@ -236,6 +238,8 @@ export function generateOperationsStats(): OperationsDashboardStats {
     bookings: {
       today: randomInt(10, 50),
       thisWeek: randomInt(80, 250),
+      thisMonth: randomInt(300, 800),
+      allTime: randomInt(5000, 15000),
     },
     ticketsSummary: {
       openTickets: randomInt(20, 60),

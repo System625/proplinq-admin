@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { UserPlus, Building, Clock, Users, AlertCircle } from 'lucide-react';
+import { UserPlus, Building, Clock, Users } from 'lucide-react';
 import { useSalesDashboardStore } from '@/stores/sales-dashboard-store';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -201,21 +201,11 @@ function SalesDashboardClient() {
                     {format(new Date(lead.created_at), 'MMM d, yyyy')}
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm">
-                        Manage
-                      </Button>
-                      <EscalateIssueDialog
-                        issueId={lead.id}
-                        issueType="lead"
-                        fromDepartment="sales"
-                        trigger={
-                          <Button variant="ghost" size="sm">
-                            <AlertCircle className="h-4 w-4" />
-                          </Button>
-                        }
-                      />
-                    </div>
+                    <EscalateIssueDialog
+                      issueId={lead.id}
+                      issueType="lead"
+                      fromDepartment="sales"
+                    />
                   </TableCell>
                 </TableRow>
               ))}
@@ -282,11 +272,6 @@ function SalesDashboardClient() {
                       issueId={partner.id}
                       issueType="general"
                       fromDepartment="sales"
-                      trigger={
-                        <Button variant="ghost" size="sm">
-                          <AlertCircle className="h-4 w-4" />
-                        </Button>
-                      }
                     />
                   </TableCell>
                 </TableRow>

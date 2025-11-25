@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Eye, MousePointerClick, Users, Target, AlertCircle } from 'lucide-react';
+import { Eye, MousePointerClick, Users, Target } from 'lucide-react';
 import { useMarketingDashboardStore } from '@/stores/marketing-dashboard-store';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -268,11 +268,6 @@ function MarketingDashboardClient() {
                       issueId={listing.id}
                       issueType="general"
                       fromDepartment="marketing"
-                      trigger={
-                        <Button variant="ghost" size="sm">
-                          <AlertCircle className="h-4 w-4" />
-                        </Button>
-                      }
                     />
                   </TableCell>
                 </TableRow>
