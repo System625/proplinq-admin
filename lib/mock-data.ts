@@ -211,6 +211,7 @@ export interface OperationsDashboardStats {
       amount: number;
     }[];
     revenueFromCommissions: number;
+    subscriptionRevenue: number;
     dealsInPipeline: number;
     agentActivityScore: number;
     agentEngagementRate: number;
@@ -266,6 +267,7 @@ export function generateOperationsStats(): OperationsDashboardStats {
         { month: 'Jun', amount: randomInt(50000, 150000) },
       ],
       revenueFromCommissions: randomInt(200000, 800000),
+      subscriptionRevenue: randomInt(300000, 1000000),
       dealsInPipeline: randomInt(15, 50),
       agentActivityScore: randomInt(70, 95),
       agentEngagementRate: randomInt(65, 90),

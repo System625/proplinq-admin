@@ -325,12 +325,20 @@ function OperationsDashboardClient() {
             />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 mt-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
             <StatCard
               title="Revenue from Commissions"
               value={`₦${stats.salesMetrics.revenueFromCommissions.toLocaleString()}`}
               icon={DollarSign}
-              description="Total commission revenue"
+              description="Hotels & shortlets revenue"
+              iconClassName="bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300"
+            />
+            <StatCard
+              title="Subscription Revenue"
+              value={`₦${stats.salesMetrics.subscriptionRevenue.toLocaleString()}`}
+              icon={CreditCard}
+              description="Subscription plans revenue"
+              iconClassName="bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300"
             />
             <Card>
               <CardHeader className="pb-3">
