@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Staff, CreateStaffRequest, UpdateStaffRequest } from '@/types/api';
 
 export default function FounderStaffPage() {
@@ -68,18 +70,20 @@ function FounderStaffClient() {
                 Add Staff
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-h-[90vh]">
               <DialogHeader>
                 <DialogTitle>Create Staff Member</DialogTitle>
                 <DialogDescription>Add a new staff member to the system</DialogDescription>
               </DialogHeader>
-              <CreateStaffForm
-                onSuccess={() => {
-                  setIsCreateOpen(false);
-                  fetchStaff();
-                }}
-                onCancel={() => setIsCreateOpen(false)}
-              />
+              <ScrollArea className="max-h-[calc(90vh-8rem)] pr-4">
+                <CreateStaffForm
+                  onSuccess={() => {
+                    setIsCreateOpen(false);
+                    fetchStaff();
+                  }}
+                  onCancel={() => setIsCreateOpen(false)}
+                />
+              </ScrollArea>
             </DialogContent>
           </Dialog>
         </CardHeader>
@@ -107,15 +111,9 @@ function FounderStaffClient() {
                   </TableCell>
                   <TableCell>
                     <Badge
-                      variant={
-                        member.status === 'active'
-                          ? 'default'
-                          : member.status === 'inactive'
-                          ? 'secondary'
-                          : 'destructive'
-                      }
+                      variant={member.is_suspended ? 'destructive' : 'default'}
                     >
-                      {member.status}
+                      {member.is_suspended ? 'Suspended' : 'Active'}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
@@ -156,25 +154,27 @@ function FounderStaffClient() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Edit Staff Member</DialogTitle>
             <DialogDescription>Update staff member details</DialogDescription>
           </DialogHeader>
-          {selectedStaff && (
-            <EditStaffForm
-              staff={selectedStaff}
-              onSuccess={() => {
-                setIsEditOpen(false);
-                setSelectedStaff(null);
-                fetchStaff();
-              }}
-              onCancel={() => {
-                setIsEditOpen(false);
-                setSelectedStaff(null);
-              }}
-            />
-          )}
+          <ScrollArea className="max-h-[calc(90vh-8rem)] pr-4">
+            {selectedStaff && (
+              <EditStaffForm
+                staff={selectedStaff}
+                onSuccess={() => {
+                  setIsEditOpen(false);
+                  setSelectedStaff(null);
+                  fetchStaff();
+                }}
+                onCancel={() => {
+                  setIsEditOpen(false);
+                  setSelectedStaff(null);
+                }}
+              />
+            )}
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
@@ -227,7 +227,28 @@ function CreateStaffForm({ onSuccess, onCancel }: { onSuccess: () => void; onCan
     email: '',
     password: '',
     role: 'support',
+    phone_number: '',
+    permissions: [],
   });
+
+  const availablePermissions = [
+    'view_tickets',
+    'respond_tickets',
+    'close_tickets',
+    'view_users',
+    'manage_users',
+    'view_reports',
+    'manage_reports',
+  ];
+
+  const togglePermission = (permission: string) => {
+    setFormData(prev => ({
+      ...prev,
+      permissions: prev.permissions.includes(permission)
+        ? prev.permissions.filter(p => p !== permission)
+        : [...prev.permissions, permission]
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -271,6 +292,17 @@ function CreateStaffForm({ onSuccess, onCancel }: { onSuccess: () => void; onCan
         />
       </div>
       <div>
+        <Label htmlFor="phone_number">Phone Number</Label>
+        <Input
+          id="phone_number"
+          type="tel"
+          value={formData.phone_number}
+          onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+          placeholder="+2348012345678"
+          required
+        />
+      </div>
+      <div>
         <Label htmlFor="role">Role</Label>
         <Select
           value={formData.role}
@@ -287,6 +319,26 @@ function CreateStaffForm({ onSuccess, onCancel }: { onSuccess: () => void; onCan
             <SelectItem value="marketing">Marketing</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+      <div>
+        <Label>Permissions</Label>
+        <div className="mt-2 space-y-2">
+          {availablePermissions.map((permission) => (
+            <div key={permission} className="flex items-center space-x-2">
+              <Checkbox
+                id={permission}
+                checked={formData.permissions.includes(permission)}
+                onCheckedChange={() => togglePermission(permission)}
+              />
+              <Label
+                htmlFor={permission}
+                className="text-sm font-normal cursor-pointer"
+              >
+                {permission.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              </Label>
+            </div>
+          ))}
+        </div>
       </div>
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel}>
@@ -314,7 +366,7 @@ function EditStaffForm({
     name: staff.name,
     email: staff.email,
     role: staff.role,
-    status: staff.status,
+    is_suspended: staff.is_suspended,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -366,21 +418,18 @@ function EditStaffForm({
           </SelectContent>
         </Select>
       </div>
-      <div>
-        <Label htmlFor="edit-status">Status</Label>
-        <Select
-          value={formData.status}
-          onValueChange={(value: 'active' | 'inactive' | 'suspended') => setFormData({ ...formData, status: value })}
+      <div className="flex items-center space-x-2">
+        <Checkbox
+          id="edit-is-suspended"
+          checked={formData.is_suspended}
+          onCheckedChange={(checked) => setFormData({ ...formData, is_suspended: checked === true })}
+        />
+        <Label
+          htmlFor="edit-is-suspended"
+          className="text-sm font-normal cursor-pointer"
         >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
-            <SelectItem value="suspended">Suspended</SelectItem>
-          </SelectContent>
-        </Select>
+          Suspend this staff member
+        </Label>
       </div>
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel}>

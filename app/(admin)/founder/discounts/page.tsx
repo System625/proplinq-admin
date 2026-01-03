@@ -14,6 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Discount, CreateDiscountRequest, UpdateDiscountRequest } from '@/types/api';
 
 export default function FounderDiscountsPage() {
@@ -113,18 +115,20 @@ function FounderDiscountsClient() {
                 Create Discount
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-h-[90vh]">
               <DialogHeader>
                 <DialogTitle>Create Discount Code</DialogTitle>
                 <DialogDescription>Create a new promotional discount</DialogDescription>
               </DialogHeader>
-              <CreateDiscountForm
-                onSuccess={() => {
-                  setIsCreateOpen(false);
-                  fetchDiscounts();
-                }}
-                onCancel={() => setIsCreateOpen(false)}
-              />
+              <ScrollArea className="max-h-[calc(90vh-8rem)] pr-4">
+                <CreateDiscountForm
+                  onSuccess={() => {
+                    setIsCreateOpen(false);
+                    fetchDiscounts();
+                  }}
+                  onCancel={() => setIsCreateOpen(false)}
+                />
+              </ScrollArea>
             </DialogContent>
           </Dialog>
         </CardHeader>
@@ -169,12 +173,10 @@ function FounderDiscountsClient() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {discount.usage_count}
-                    {discount.usage_limit && ` / ${discount.usage_limit}`}
+                    {discount.usage_count} / {discount.max_uses}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {new Date(discount.start_date).toLocaleDateString()}
-                    {discount.end_date && ` - ${new Date(discount.end_date).toLocaleDateString()}`}
+                    {new Date(discount.valid_from).toLocaleDateString()} - {new Date(discount.valid_until).toLocaleDateString()}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
@@ -209,25 +211,27 @@ function FounderDiscountsClient() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Edit Discount</DialogTitle>
             <DialogDescription>Update discount details</DialogDescription>
           </DialogHeader>
-          {selectedDiscount && (
-            <EditDiscountForm
-              discount={selectedDiscount}
-              onSuccess={() => {
-                setIsEditOpen(false);
-                setSelectedDiscount(null);
-                fetchDiscounts();
-              }}
-              onCancel={() => {
-                setIsEditOpen(false);
-                setSelectedDiscount(null);
-              }}
-            />
-          )}
+          <ScrollArea className="max-h-[calc(90vh-8rem)] pr-4">
+            {selectedDiscount && (
+              <EditDiscountForm
+                discount={selectedDiscount}
+                onSuccess={() => {
+                  setIsEditOpen(false);
+                  setSelectedDiscount(null);
+                  fetchDiscounts();
+                }}
+                onCancel={() => {
+                  setIsEditOpen(false);
+                  setSelectedDiscount(null);
+                }}
+              />
+            )}
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
@@ -279,6 +283,13 @@ function CreateDiscountForm({ onSuccess, onCancel }: { onSuccess: () => void; on
     code: '',
     type: 'percentage',
     value: 0,
+    max_uses: 0,
+    valid_from: '',
+    valid_until: '',
+    applicable_to: '',
+    min_amount: 0,
+    max_discount: 0,
+    description: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -330,42 +341,78 @@ function CreateDiscountForm({ onSuccess, onCancel }: { onSuccess: () => void; on
         />
       </div>
       <div>
-        <Label htmlFor="usage_limit">Usage Limit (Optional)</Label>
+        <Label htmlFor="max_uses">Max Uses</Label>
         <Input
-          id="usage_limit"
+          id="max_uses"
           type="number"
-          value={formData.usage_limit || ''}
-          onChange={(e) =>
-            setFormData({ ...formData, usage_limit: e.target.value ? parseInt(e.target.value) : undefined })
-          }
+          value={formData.max_uses}
+          onChange={(e) => setFormData({ ...formData, max_uses: parseInt(e.target.value) })}
           placeholder="100"
+          required
         />
       </div>
       <div>
-        <Label htmlFor="start_date">Start Date (Optional)</Label>
+        <Label htmlFor="valid_from">Valid From</Label>
         <Input
-          id="start_date"
+          id="valid_from"
           type="date"
-          value={formData.start_date || ''}
-          onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+          value={formData.valid_from}
+          onChange={(e) => setFormData({ ...formData, valid_from: e.target.value })}
+          required
         />
       </div>
       <div>
-        <Label htmlFor="end_date">End Date (Optional)</Label>
+        <Label htmlFor="valid_until">Valid Until</Label>
         <Input
-          id="end_date"
+          id="valid_until"
           type="date"
-          value={formData.end_date || ''}
-          onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+          value={formData.valid_until}
+          onChange={(e) => setFormData({ ...formData, valid_until: e.target.value })}
+          required
         />
       </div>
       <div>
-        <Label htmlFor="description">Description (Optional)</Label>
+        <Label htmlFor="applicable_to">Applicable To</Label>
+        <Input
+          id="applicable_to"
+          value={formData.applicable_to}
+          onChange={(e) => setFormData({ ...formData, applicable_to: e.target.value })}
+          placeholder="all"
+          required
+        />
+      </div>
+      <div>
+        <Label htmlFor="min_amount">Minimum Amount</Label>
+        <Input
+          id="min_amount"
+          type="number"
+          step="0.01"
+          value={formData.min_amount}
+          onChange={(e) => setFormData({ ...formData, min_amount: parseFloat(e.target.value) })}
+          placeholder="1000.00"
+          required
+        />
+      </div>
+      <div>
+        <Label htmlFor="max_discount">Max Discount</Label>
+        <Input
+          id="max_discount"
+          type="number"
+          step="0.01"
+          value={formData.max_discount}
+          onChange={(e) => setFormData({ ...formData, max_discount: parseFloat(e.target.value) })}
+          placeholder="5000.00"
+          required
+        />
+      </div>
+      <div>
+        <Label htmlFor="description">Description</Label>
         <Textarea
           id="description"
-          value={formData.description || ''}
+          value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           placeholder="Description of the discount"
+          required
         />
       </div>
       <div className="flex justify-end gap-2">
@@ -391,11 +438,9 @@ function EditDiscountForm({
 }) {
   const { updateDiscount, isLoading } = useFounderDiscountsStore();
   const [formData, setFormData] = useState<UpdateDiscountRequest>({
-    code: discount.code,
     value: discount.value,
-    status: discount.status === 'expired' ? 'inactive' : discount.status,
-    usage_limit: discount.usage_limit,
-    end_date: discount.end_date,
+    max_uses: discount.max_uses,
+    is_active: discount.status === 'active',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -411,63 +456,37 @@ function EditDiscountForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <Label htmlFor="edit-code">Discount Code</Label>
-        <Input
-          id="edit-code"
-          value={formData.code}
-          onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-          required
-        />
-      </div>
-      <div>
         <Label htmlFor="edit-value">Value</Label>
         <Input
           id="edit-value"
           type="number"
-          value={formData.value}
-          onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) })}
-          required
+          value={formData.value || ''}
+          onChange={(e) => setFormData({ ...formData, value: e.target.value ? parseFloat(e.target.value) : undefined })}
         />
       </div>
       <div>
-        <Label htmlFor="edit-status">Status</Label>
-        <Select
-          value={formData.status}
-          onValueChange={(value: 'active' | 'inactive') =>
-            setFormData({ ...formData, status: value })
-          }
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div>
-        <Label htmlFor="edit-usage_limit">Usage Limit</Label>
+        <Label htmlFor="edit-max_uses">Max Uses</Label>
         <Input
-          id="edit-usage_limit"
+          id="edit-max_uses"
           type="number"
-          value={formData.usage_limit || ''}
+          value={formData.max_uses || ''}
           onChange={(e) =>
             setFormData({
               ...formData,
-              usage_limit: e.target.value ? parseInt(e.target.value) : undefined,
+              max_uses: e.target.value ? parseInt(e.target.value) : undefined,
             })
           }
         />
       </div>
-      <div>
-        <Label htmlFor="edit-end_date">End Date</Label>
-        <Input
-          id="edit-end_date"
-          type="date"
-          value={formData.end_date || ''}
-          onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+      <div className="flex items-center space-x-2">
+        <Checkbox
+          id="edit-is-active"
+          checked={formData.is_active}
+          onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked === true })}
         />
+        <Label htmlFor="edit-is-active" className="text-sm font-normal cursor-pointer">
+          Discount is active
+        </Label>
       </div>
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel}>

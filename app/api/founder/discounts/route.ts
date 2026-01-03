@@ -16,6 +16,14 @@ export async function GET(request: NextRequest) {
     const response = await fetch(url, { headers, cache: 'no-store' });
     const data = await response.json();
 
+    console.log('=== FETCH DISCOUNTS ===');
+    console.log('Backend Response Status:', response.status);
+    console.log('Number of Discounts:', data?.data?.length || 0);
+    if (data?.data?.length > 0) {
+      console.log('First Discount:', JSON.stringify(data.data[0], null, 2));
+    }
+    console.log('=== END FETCH DISCOUNTS ===');
+
     if (!response.ok) {
       return NextResponse.json(
         { message: data.message || 'Failed to fetch discounts' },
@@ -24,8 +32,8 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(data);
-  } catch {
-    console.error('Founder discounts list API error:');
+  } catch (error) {
+    console.error('Founder discounts list API error:', error);
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

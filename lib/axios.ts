@@ -28,6 +28,7 @@ import {
   ListStaffResponse,
   CreateStaffRequest,
   UpdateStaffRequest,
+  UpdatePermissionsRequest,
   ApproveKYCOverrideRequest,
   DeclineKYCOverrideRequest,
   OverrideSubscriptionRequest,
@@ -756,7 +757,7 @@ export const apiService = {
     }
 
     const response = await fetch(`/api/escalations/${id}`, {
-      method: 'PATCH',
+      method: 'PUT',
       headers,
       body: JSON.stringify(data),
     });
@@ -984,7 +985,7 @@ export const apiService = {
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
     const response = await fetch(`/api/founder/staff/${id}`, {
-      method: 'PATCH',
+      method: 'PUT',
       headers,
       body: JSON.stringify(data),
     });
@@ -1005,15 +1006,15 @@ export const apiService = {
     if (!response.ok) throw new Error('Failed to delete staff');
   },
 
-  async updateFounderStaffPermissions(id: string, permissions: string[]): Promise<Staff> {
+  async updateFounderStaffPermissions(id: string, data: UpdatePermissionsRequest): Promise<Staff> {
     const token = typeof window !== 'undefined' ? localStorage.getItem('proplinq_admin_token') : null;
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
     const response = await fetch(`/api/founder/staff/${id}/permissions`, {
-      method: 'PATCH',
+      method: 'POST',
       headers,
-      body: JSON.stringify({ permissions }),
+      body: JSON.stringify(data),
     });
     if (!response.ok) throw new Error('Failed to update permissions');
     const result = await response.json();
@@ -1118,7 +1119,7 @@ export const apiService = {
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
     const response = await fetch(`/api/founder/discounts/${id}`, {
-      method: 'PATCH',
+      method: 'PUT',
       headers,
       body: JSON.stringify(data),
     });
@@ -1648,7 +1649,7 @@ export const apiService = {
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
     const response = await fetch(`/api/sales/onboarding/${id}`, {
-      method: 'PATCH',
+      method: 'PUT',
       headers,
       body: JSON.stringify(requestData),
     });
@@ -1814,7 +1815,7 @@ export const apiService = {
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
     const response = await fetch(`/api/sales/properties/${id}`, {
-      method: 'PATCH',
+      method: 'PUT',
       headers,
       body: JSON.stringify(requestData),
     });

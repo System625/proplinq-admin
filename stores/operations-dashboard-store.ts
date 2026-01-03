@@ -177,14 +177,14 @@ export const useOperationsDashboardStore = create<OperationsDashboardState>((set
       // Map dashboard data to UI stats format
       const stats: UIStats | null = dashboardData
         ? {
-            totalSubscriptions: dashboardData.active_subscriptions,
-            activeSubscriptions: dashboardData.active_subscriptions,
+            totalSubscriptions: dashboardData.active_subscriptions ?? 0,
+            activeSubscriptions: dashboardData.active_subscriptions ?? 0,
             pendingSubscriptions: 0, // Not provided by API
             cancelledThisMonth: 0, // Not provided by API
             kycOverview: {
-              pendingKyc: dashboardData.pending_kyc,
+              pendingKyc: dashboardData.pending_kyc ?? 0,
               approvedToday: 0, // Not provided by API
-              totalVerified: dashboardData.flagged_kyc,
+              totalVerified: dashboardData.flagged_kyc ?? 0,
             },
             ticketsSummary: {
               openTickets: 0,
@@ -193,10 +193,10 @@ export const useOperationsDashboardStore = create<OperationsDashboardState>((set
               resolvedToday: 0,
               avgResolutionTime: 0,
             },
-            totalRevenue: dashboardData.total_revenue,
-            monthlyRevenue: dashboardData.monthly_revenue,
-            walletBalance: dashboardData.total_wallet_balance,
-            pendingPayouts: dashboardData.pending_reconciliations,
+            totalRevenue: dashboardData.total_revenue ?? 0,
+            monthlyRevenue: dashboardData.monthly_revenue ?? 0,
+            walletBalance: dashboardData.total_wallet_balance ?? 0,
+            pendingPayouts: dashboardData.pending_reconciliations ?? 0,
             salesMetrics: {
               subscriptionSales: [],
               newAgentsThisWeek: 0,
@@ -212,7 +212,7 @@ export const useOperationsDashboardStore = create<OperationsDashboardState>((set
               },
               dealsInPipeline: 0,
               revenueFromCommissions: 0,
-              subscriptionRevenue: dashboardData.total_revenue,
+              subscriptionRevenue: dashboardData.total_revenue ?? 0,
               agentActivityScore: 0,
               agentEngagementRate: 0,
             },

@@ -43,6 +43,10 @@ export async function PUT(
     const authorization = request.headers.get('authorization');
     const body = await request.json();
 
+    console.log('=== UPDATE DISCOUNT REQUEST ===');
+    console.log('Discount ID:', params.id);
+    console.log('Request Body:', JSON.stringify(body, null, 2));
+
     const headers: Record<string, string> = {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
@@ -57,6 +61,10 @@ export async function PUT(
 
     const data = await response.json();
 
+    console.log('Backend Response Status:', response.status);
+    console.log('Backend Response Data:', JSON.stringify(data, null, 2));
+    console.log('=== END UPDATE DISCOUNT ===');
+
     if (!response.ok) {
       return NextResponse.json(
         { message: data.message || 'Failed to update discount' },
@@ -65,8 +73,8 @@ export async function PUT(
     }
 
     return NextResponse.json(data);
-  } catch {
-    console.error('Founder discount update API error:');
+  } catch (error) {
+    console.error('Founder discount update API error:', error);
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

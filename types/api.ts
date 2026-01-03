@@ -573,8 +573,9 @@ export interface Staff {
   id: number;
   name: string;
   email: string;
+  phone_number: string;
   role: 'admin' | 'support' | 'operations' | 'sales' | 'marketing';
-  status: 'active' | 'inactive' | 'suspended';
+  is_suspended: boolean;
   permissions: string[];
   created_at: string;
   last_login_at?: string;
@@ -593,18 +594,22 @@ export interface CreateStaffRequest {
   email: string;
   password: string;
   role: 'admin' | 'support' | 'operations' | 'sales' | 'marketing';
-  permissions?: string[];
+  phone_number: string;
+  permissions: string[];
 }
 
 export interface UpdateStaffRequest {
   name?: string;
   email?: string;
-  role?: string;
-  status?: 'active' | 'inactive' | 'suspended';
+  role?: 'admin' | 'support' | 'operations' | 'sales' | 'marketing';
+  is_suspended?: boolean;
 }
 
 export interface UpdatePermissionsRequest {
-  permissions: string[];
+  permissions: Array<{
+    permission: string;
+    granted: boolean;
+  }>;
 }
 
 // Override Types
@@ -638,10 +643,14 @@ export interface Discount {
   type: 'percentage' | 'fixed';
   value: number;
   status: 'active' | 'inactive' | 'expired';
-  usage_limit?: number;
+  max_uses: number;
   usage_count: number;
-  start_date: string;
-  end_date?: string;
+  valid_from: string;
+  valid_until: string;
+  applicable_to: string;
+  min_amount: number;
+  max_discount: number;
+  description: string;
   created_at: string;
 }
 
@@ -657,18 +666,19 @@ export interface CreateDiscountRequest {
   code: string;
   type: 'percentage' | 'fixed';
   value: number;
-  usage_limit?: number;
-  start_date?: string;
-  end_date?: string;
-  description?: string;
+  max_uses: number;
+  valid_from: string;
+  valid_until: string;
+  applicable_to: string;
+  min_amount: number;
+  max_discount: number;
+  description: string;
 }
 
 export interface UpdateDiscountRequest {
-  code?: string;
   value?: number;
-  status?: 'active' | 'inactive';
-  usage_limit?: number;
-  end_date?: string;
+  max_uses?: number;
+  is_active?: boolean;
 }
 
 // Report Types

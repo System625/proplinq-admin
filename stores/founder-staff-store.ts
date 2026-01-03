@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { apiService } from '@/lib/axios';
-import { Staff, ListStaffResponse, CreateStaffRequest, UpdateStaffRequest } from '@/types/api';
+import { Staff, ListStaffResponse, CreateStaffRequest, UpdateStaffRequest, UpdatePermissionsRequest } from '@/types/api';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/api-error-handler';
 
@@ -15,7 +15,7 @@ interface FounderStaffState {
   createStaff: (data: CreateStaffRequest) => Promise<void>;
   updateStaff: (id: string, data: UpdateStaffRequest) => Promise<void>;
   deleteStaff: (id: string) => Promise<void>;
-  updatePermissions: (id: string, permissions: string[]) => Promise<void>;
+  updatePermissions: (id: string, data: UpdatePermissionsRequest) => Promise<void>;
   clearError: () => void;
 }
 
@@ -91,10 +91,10 @@ export const useFounderStaffStore = create<FounderStaffState>((set, get) => ({
     }
   },
 
-  updatePermissions: async (id, permissions) => {
+  updatePermissions: async (id, data) => {
     set({ isLoading: true, error: null });
     try {
-      await apiService.updateFounderStaffPermissions(id, permissions);
+      await apiService.updateFounderStaffPermissions(id, data);
       await get().fetchStaffById(id);
       toast.success('Permissions updated successfully');
     } catch (error: any) {
