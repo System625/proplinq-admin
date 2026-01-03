@@ -34,8 +34,8 @@ export async function GET(
 
     const data = await response.json();
     return NextResponse.json(data);
-  } catch (error) {
-    console.error('Get blog post API error:', error);
+  } catch {
+    console.error('Get blog post API error:');
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
@@ -92,7 +92,7 @@ export async function PUT(
     console.log('✅ Blog Post API: PUT successful:', data);
     return NextResponse.json(data);
   } catch (error) {
-    console.error('❌ Blog Post API: PUT error:', error);
+    console.error('❌ Blog Post API: PUT error:');
     console.error('❌ Blog Post API: Error stack:', error instanceof Error ? error.stack : 'No stack trace available');
     return NextResponse.json(
       { message: 'Internal server error' },
@@ -138,8 +138,8 @@ export async function DELETE(
 
     const data = await response.json();
     return NextResponse.json(data);
-  } catch (error) {
-    console.error('Delete blog post API error:', error);
+  } catch {
+    console.error('Delete blog post API error:');
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

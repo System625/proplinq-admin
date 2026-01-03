@@ -56,8 +56,8 @@ export async function GET(request: NextRequest) {
     console.log('📄 Blog Posts API: Data preview:', JSON.stringify(data).substring(0, 200) + '...');
 
     return NextResponse.json(data);
-  } catch (error) {
-    console.error('❌ Blog Posts API: GET error:', error);
+  } catch {
+    console.error('❌ Blog Posts API: GET error:');
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(data);
   } catch (error) {
-    console.error('❌ Blog Posts API: POST error:', error);
+    console.error('❌ Blog Posts API: POST error:');
     console.error('❌ Blog Posts API: Error stack:', error instanceof Error ? error.stack : 'No stack trace available');
     return NextResponse.json(
       { message: 'Internal server error' },

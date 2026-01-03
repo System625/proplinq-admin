@@ -32,8 +32,8 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(data);
-  } catch (error) {
-    console.error('Company data GET API error:', error);
+  } catch {
+    console.error('Company data GET API error:');
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
@@ -73,8 +73,8 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(data);
-  } catch (error) {
-    console.error('Company data POST API error:', error);
+  } catch {
+    console.error('Company data POST API error:');
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

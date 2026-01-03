@@ -72,8 +72,8 @@ export async function GET(request: NextRequest) {
       status: 200,
       headers,
     });
-  } catch (error) {
-    console.error('Proxy error:', error);
+  } catch {
+    console.error('Proxy error:');
     return new NextResponse('Error fetching file', { status: 500 });
   }
 }

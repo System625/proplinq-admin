@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(data);
   } catch (error) {
-    console.error('❌ Upload Image API: Error:', error);
+    console.error('❌ Upload Image API: Error:');
     console.error('❌ Upload Image API: Error stack:', error instanceof Error ? error.stack : 'No stack trace available');
     return NextResponse.json(
       { message: 'Internal server error' },

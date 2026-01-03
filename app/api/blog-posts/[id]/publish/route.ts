@@ -47,7 +47,7 @@ export async function POST(
     console.log('✅ Blog Post Publish API: POST successful:', data);
     return NextResponse.json(data);
   } catch (error) {
-    console.error('❌ Blog Post Publish API: POST error:', error);
+    console.error('❌ Blog Post Publish API: POST error:');
     console.error('❌ Blog Post Publish API: Error stack:', error instanceof Error ? error.stack : 'No stack trace available');
     return NextResponse.json(
       { message: 'Internal server error' },

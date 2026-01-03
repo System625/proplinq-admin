@@ -46,8 +46,8 @@ export async function GET(request: NextRequest) {
     };
 
     return NextResponse.json(transformedData);
-  } catch (error) {
-    console.error('Transactions API error:', error);
+  } catch {
+    console.error('Transactions API error:');
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

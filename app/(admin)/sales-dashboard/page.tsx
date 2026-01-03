@@ -40,14 +40,14 @@ export default function SalesDashboardPage() {
 }
 
 function SalesDashboardClient() {
-  const { stats, leads, partners, isLoading, fetchDashboardData, refreshLeads } =
+  const { dashboard, onboardingRequests, partners, isLoading, fetchDashboardData, refreshDashboard } =
     useSalesDashboardStore();
 
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  if (isLoading && !stats) {
+  if (isLoading && !dashboard) {
     return (
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -60,7 +60,27 @@ function SalesDashboardClient() {
     );
   }
 
-  if (!stats) return null;
+  if (!dashboard) return null;
+
+  // Transform API data to match UI expectations
+  const totalPartners = (dashboard.pipeline?.hotels ?? 0) + (dashboard.pipeline?.shortlets ?? 0) + (dashboard.pipeline?.agents ?? 0);
+  const totalOnboarding = (dashboard.onboarding?.pending ?? 0) + (dashboard.onboarding?.in_progress ?? 0);
+  const totalCompleted = dashboard.onboarding?.completed_this_month ?? 0;
+
+  const stats = {
+    totalPartners: totalPartners,
+    newThisMonth: totalCompleted,
+    onboardingInProgress: totalOnboarding,
+    totalProperties: partners.reduce((sum, p) => sum + (p.properties_count ?? 0), 0),
+    kycPending: partners.filter(p => p.user?.kyc_status === 'pending').length,
+    kycVerified: partners.filter(p => p.user?.kyc_status === 'approved').length,
+    avgPropertiesPerPartner: totalPartners > 0
+      ? Math.round(partners.reduce((sum, p) => sum + (p.properties_count ?? 0), 0) / totalPartners)
+      : 0,
+    conversionRate: (totalOnboarding + totalCompleted) > 0
+      ? Math.round((totalCompleted / (totalOnboarding + totalCompleted)) * 100)
+      : 0,
+  };
 
   return (
     <div className="space-y-6">
@@ -151,7 +171,7 @@ function SalesDashboardClient() {
             <CardTitle>Onboarding Pipeline</CardTitle>
             <CardDescription>Current onboarding leads and their status</CardDescription>
           </div>
-          <Button variant="outline" size="sm" onClick={refreshLeads}>
+          <Button variant="outline" size="sm" onClick={refreshDashboard}>
             Refresh
           </Button>
         </CardHeader>
@@ -170,45 +190,53 @@ function SalesDashboardClient() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {leads.map((lead) => (
-                <TableRow key={lead.id}>
-                  <TableCell className="font-mono text-sm">{lead.id}</TableCell>
-                  <TableCell className="font-medium">{lead.name}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="capitalize">
-                      {lead.type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{lead.properties}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        lead.status === 'new'
-                          ? 'secondary'
-                          : lead.status === 'completed'
-                          ? 'default'
-                          : 'outline'
-                      }
-                      className="capitalize"
-                    >
-                      {lead.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {lead.contact}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {format(new Date(lead.created_at), 'MMM d, yyyy')}
-                  </TableCell>
-                  <TableCell>
-                    <EscalateIssueDialog
-                      issueId={lead.id}
-                      issueType="lead"
-                      fromDepartment="sales"
-                    />
+              {onboardingRequests.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                    No onboarding requests found
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                onboardingRequests.map((request) => (
+                  <TableRow key={request.id}>
+                    <TableCell className="font-mono text-sm">{request.id}</TableCell>
+                    <TableCell className="font-medium">{request.business_name}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="capitalize">
+                        {request.type}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{request.properties_count || 0}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          request.status === 'pending'
+                            ? 'secondary'
+                            : request.status === 'completed'
+                            ? 'default'
+                            : 'outline'
+                        }
+                        className="capitalize"
+                      >
+                        {request.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {request.email}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {format(new Date(request.created_at), 'MMM d, yyyy')}
+                    </TableCell>
+                    <TableCell>
+                      <EscalateIssueDialog
+                        issueId={request.id.toString()}
+                        issueType="lead"
+                        fromDepartment="sales"
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -236,46 +264,56 @@ function SalesDashboardClient() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {partners.slice(0, 10).map((partner) => (
-                <TableRow key={partner.id}>
-                  <TableCell className="font-mono text-sm">{partner.id}</TableCell>
-                  <TableCell className="font-medium">{partner.name}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="capitalize">
-                      {partner.type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{partner.properties}</TableCell>
-                  <TableCell>{partner.bookings}</TableCell>
-                  <TableCell className="font-medium">
-                    ₦{partner.revenue.toLocaleString()}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        partner.kyc_status === 'verified'
-                          ? 'default'
-                          : partner.kyc_status === 'pending'
-                          ? 'secondary'
-                          : 'destructive'
-                      }
-                      className="capitalize"
-                    >
-                      {partner.kyc_status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {format(new Date(partner.last_active), 'MMM d, yyyy')}
-                  </TableCell>
-                  <TableCell>
-                    <EscalateIssueDialog
-                      issueId={partner.id}
-                      issueType="general"
-                      fromDepartment="sales"
-                    />
+              {partners.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
+                    No partners found
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                partners.slice(0, 10).map((partner) => (
+                  <TableRow key={partner.id}>
+                    <TableCell className="font-mono text-sm">{partner.id}</TableCell>
+                    <TableCell className="font-medium">{partner.business_name}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="capitalize">
+                        {partner.type}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{partner.properties_count}</TableCell>
+                    <TableCell>{partner.total_bookings}</TableCell>
+                    <TableCell className="font-medium">
+                      ₦{partner.total_revenue.toLocaleString()}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          partner.user?.kyc_status === 'approved'
+                            ? 'default'
+                            : partner.user?.kyc_status === 'pending'
+                            ? 'secondary'
+                            : 'destructive'
+                        }
+                        className="capitalize"
+                      >
+                        {partner.user?.kyc_status || 'unknown'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {partner.last_active_at
+                        ? format(new Date(partner.last_active_at), 'MMM d, yyyy')
+                        : 'Never'}
+                    </TableCell>
+                    <TableCell>
+                      <EscalateIssueDialog
+                        issueId={partner.id.toString()}
+                        issueType="general"
+                        fromDepartment="sales"
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>

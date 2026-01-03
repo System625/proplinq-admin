@@ -38,8 +38,8 @@ export async function POST(
     }
 
     return NextResponse.json(data);
-  } catch (error) {
-    console.error('KYC review API error:', error);
+  } catch {
+    console.error('KYC review API error:');
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

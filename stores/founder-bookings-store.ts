@@ -1,0 +1,40 @@
+import { create } from 'zustand';
+import { apiService } from '@/lib/axios';
+import { BookingsDashboard } from '@/types/api';
+import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/api-error-handler';
+
+interface FounderBookingsState {
+  dashboard: BookingsDashboard | null;
+  isLoading: boolean;
+  error: string | null;
+
+  fetchDashboard: () => Promise<void>;
+  refreshDashboard: () => Promise<void>;
+  clearError: () => void;
+}
+
+export const useFounderBookingsStore = create<FounderBookingsState>((set, get) => ({
+  dashboard: null,
+  isLoading: false,
+  error: null,
+
+  fetchDashboard: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const data = await apiService.getFounderBookingsDashboard();
+      set({ dashboard: data, isLoading: false });
+    } catch (error: any) {
+      const errorMessage = getErrorMessage(error);
+      set({ error: errorMessage, isLoading: false });
+      toast.error(`Bookings Dashboard Error: ${errorMessage}`);
+    }
+  },
+
+  refreshDashboard: async () => {
+    await get().fetchDashboard();
+    toast.success('Bookings dashboard refreshed');
+  },
+
+  clearError: () => set({ error: null }),
+}));

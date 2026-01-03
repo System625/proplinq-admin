@@ -237,9 +237,18 @@ export const useAuthStore = create<AuthState>()(
         // Type guard to check if user has role property
         const userRole = (user as ApiUser).role;
 
-        // Validate role
-        if (userRole && isValidRole(userRole)) {
-          return userRole as UserRole;
+        // Map backend roles to frontend RBAC roles
+        if (userRole) {
+          // Map super_admin/superadmin to founder role
+          if (userRole.toLowerCase() === 'super_admin' || userRole.toLowerCase() === 'superadmin') {
+            console.log('Mapping super admin role to founder');
+            return 'founder';
+          }
+
+          // Validate and return role if it exists in RBAC
+          if (isValidRole(userRole)) {
+            return userRole as UserRole;
+          }
         }
 
         // Default to admin for backward compatibility

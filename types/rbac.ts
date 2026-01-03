@@ -9,7 +9,8 @@ export type UserRole =
   | 'customer_support'
   | 'operations'
   | 'sales'
-  | 'marketing';
+  | 'marketing'
+  | 'founder';
 
 // Feature/page identifiers
 export type Feature =
@@ -18,12 +19,25 @@ export type Feature =
   | 'operations-dashboard'
   | 'sales-dashboard'
   | 'marketing-dashboard'
+  | 'crm-dashboard'
   | 'users'
   | 'blog-posts'
+  | 'listings'
   | 'bookings'
   | 'transactions'
   | 'kyc'
-  | 'data-management';
+  | 'data-management'
+  | 'founder-revenue'
+  | 'founder-subscriptions'
+  | 'founder-wallets'
+  | 'founder-growth'
+  | 'founder-properties'
+  | 'founder-bookings'
+  | 'founder-support'
+  | 'founder-staff'
+  | 'founder-overrides'
+  | 'founder-discounts'
+  | 'founder-reports';
 
 // Permission levels
 export type PermissionLevel = 'none' | 'view' | 'edit' | 'full';
@@ -58,6 +72,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RoleConfig> = {
       { feature: 'dashboard', level: 'full' },
       { feature: 'users', level: 'full' },
       { feature: 'blog-posts', level: 'full' },
+      { feature: 'listings', level: 'full' },
       { feature: 'bookings', level: 'full' },
       { feature: 'transactions', level: 'full' },
       { feature: 'kyc', level: 'full' },
@@ -66,6 +81,19 @@ export const ROLE_PERMISSIONS: Record<UserRole, RoleConfig> = {
       { feature: 'operations-dashboard', level: 'full' },
       { feature: 'sales-dashboard', level: 'full' },
       { feature: 'marketing-dashboard', level: 'full' },
+      { feature: 'crm-dashboard', level: 'full' },
+      // Founder features
+      { feature: 'founder-revenue', level: 'full' },
+      { feature: 'founder-subscriptions', level: 'full' },
+      { feature: 'founder-wallets', level: 'full' },
+      { feature: 'founder-growth', level: 'full' },
+      { feature: 'founder-properties', level: 'full' },
+      { feature: 'founder-bookings', level: 'full' },
+      { feature: 'founder-support', level: 'full' },
+      { feature: 'founder-staff', level: 'full' },
+      { feature: 'founder-overrides', level: 'full' },
+      { feature: 'founder-discounts', level: 'full' },
+      { feature: 'founder-reports', level: 'full' },
     ],
   },
 
@@ -79,6 +107,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RoleConfig> = {
       { feature: 'users', level: 'view', description: 'View user profiles to confirm identity' },
       { feature: 'bookings', level: 'view', description: 'View bookings to assist users' },
       { feature: 'kyc', level: 'view', description: 'View KYC status' },
+      { feature: 'crm-dashboard', level: 'view', description: 'View CRM data for customer context' },
     ],
   },
 
@@ -90,9 +119,11 @@ export const ROLE_PERMISSIONS: Record<UserRole, RoleConfig> = {
     permissions: [
       { feature: 'operations-dashboard', level: 'full', description: 'Operations dashboard' },
       { feature: 'transactions', level: 'full', description: 'Full subscription and wallet control' },
+      { feature: 'listings', level: 'full', description: 'Review and approve listings' },
       { feature: 'bookings', level: 'edit', description: 'Manage bookings' },
       { feature: 'kyc', level: 'edit', description: 'Handle flagged KYC cases' },
       { feature: 'data-management', level: 'view', description: 'View system data' },
+      { feature: 'crm-dashboard', level: 'view', description: 'View CRM analytics' },
     ],
   },
 
@@ -106,6 +137,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RoleConfig> = {
       { feature: 'users', level: 'full', description: 'Onboard and manage partners' },
       { feature: 'kyc', level: 'view', description: 'Track KYC completion' },
       { feature: 'blog-posts', level: 'edit', description: 'Create marketing content' },
+      { feature: 'crm-dashboard', level: 'full', description: 'Full CRM access for lead and contact management' },
     ],
   },
 
@@ -120,6 +152,40 @@ export const ROLE_PERMISSIONS: Record<UserRole, RoleConfig> = {
       { feature: 'bookings', level: 'view', description: 'View booking analytics' },
       { feature: 'kyc', level: 'view', description: 'View verification trends' },
       { feature: 'blog-posts', level: 'full', description: 'Manage marketing content' },
+      { feature: 'crm-dashboard', level: 'view', description: 'View CRM analytics and lead metrics' },
+    ],
+  },
+
+  founder: {
+    role: 'founder',
+    displayName: 'Founder',
+    description: 'Full system access with executive dashboards and override capabilities',
+    defaultDashboard: '/dashboard',
+    permissions: [
+      { feature: 'dashboard', level: 'full', description: 'Main dashboard overview' },
+      { feature: 'founder-revenue', level: 'full', description: 'Revenue analytics and insights' },
+      { feature: 'founder-subscriptions', level: 'full', description: 'Subscription management and metrics' },
+      { feature: 'founder-wallets', level: 'full', description: 'Wallet and transaction analytics' },
+      { feature: 'founder-growth', level: 'full', description: 'Growth metrics and trends' },
+      { feature: 'founder-properties', level: 'full', description: 'Property analytics and performance' },
+      { feature: 'founder-bookings', level: 'full', description: 'Booking analytics and trends' },
+      { feature: 'founder-support', level: 'full', description: 'Support metrics and analytics' },
+      { feature: 'founder-staff', level: 'full', description: 'Staff management and permissions' },
+      { feature: 'founder-overrides', level: 'full', description: 'Override approvals and actions' },
+      { feature: 'founder-discounts', level: 'full', description: 'Discount management' },
+      { feature: 'founder-reports', level: 'full', description: 'Executive reports and insights' },
+      { feature: 'users', level: 'full', description: 'Full user management' },
+      { feature: 'blog-posts', level: 'full', description: 'Full content management' },
+      { feature: 'listings', level: 'full', description: 'Full listing management' },
+      { feature: 'bookings', level: 'full', description: 'Full booking management' },
+      { feature: 'transactions', level: 'full', description: 'Full transaction control' },
+      { feature: 'kyc', level: 'full', description: 'Full KYC control' },
+      { feature: 'data-management', level: 'full', description: 'Full data management' },
+      { feature: 'support-dashboard', level: 'full', description: 'Support dashboard access' },
+      { feature: 'operations-dashboard', level: 'full', description: 'Operations dashboard access' },
+      { feature: 'sales-dashboard', level: 'full', description: 'Sales dashboard access' },
+      { feature: 'marketing-dashboard', level: 'full', description: 'Marketing dashboard access' },
+      { feature: 'crm-dashboard', level: 'full', description: 'Full CRM dashboard access' },
     ],
   },
 };
@@ -133,12 +199,25 @@ export const FEATURE_ROUTES: Record<Feature, string> = {
   'operations-dashboard': '/operations-dashboard',
   'sales-dashboard': '/sales-dashboard',
   'marketing-dashboard': '/marketing-dashboard',
+  'crm-dashboard': '/crm-dashboard',
   'users': '/users',
   'blog-posts': '/blog-posts',
+  'listings': '/listings',
   'bookings': '/bookings',
   'transactions': '/transactions',
   'kyc': '/kyc',
   'data-management': '/data-management',
+  'founder-revenue': '/founder-revenue',
+  'founder-subscriptions': '/founder-subscriptions',
+  'founder-wallets': '/founder-wallets',
+  'founder-growth': '/founder-growth',
+  'founder-properties': '/founder-properties',
+  'founder-bookings': '/founder-bookings',
+  'founder-support': '/founder-support',
+  'founder-staff': '/founder/staff',
+  'founder-overrides': '/founder/overrides',
+  'founder-discounts': '/founder/discounts',
+  'founder-reports': '/founder/reports',
 };
 
 /**

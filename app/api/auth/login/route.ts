@@ -35,8 +35,8 @@ export async function POST(request: NextRequest) {
 
     // Return the response from the backend
     return NextResponse.json(data);
-  } catch (error) {
-    console.error('Login API error:', error);
+  } catch {
+    console.error('Login API error:');
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

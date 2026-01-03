@@ -34,8 +34,8 @@ export async function GET(
     }
 
     return NextResponse.json(data);
-  } catch (error) {
-    console.error('Booking GET API error:', error);
+  } catch {
+    console.error('Booking GET API error:');
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
@@ -91,8 +91,8 @@ export async function PUT(
 
     console.log('✅ Booking API Route: Update successful');
     return NextResponse.json(data);
-  } catch (error) {
-    console.error('❌ Booking update API error:', error);
+  } catch {
+    console.error('❌ Booking update API error:');
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

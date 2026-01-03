@@ -36,8 +36,8 @@ export async function GET(request: NextRequest) {
 
     // Return raw Laravel pagination response
     return NextResponse.json(data);
-  } catch (error) {
-    console.error('Users API error:', error);
+  } catch {
+    console.error('Users API error:');
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

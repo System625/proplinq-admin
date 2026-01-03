@@ -109,8 +109,8 @@ export async function GET(request: NextRequest) {
     console.log('✅ API Route: Final transformed data:', JSON.stringify(transformedData, null, 2));
 
     return NextResponse.json(transformedData);
-  } catch (error) {
-    console.error('Bookings API error:', error);
+  } catch {
+    console.error('Bookings API error:');
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

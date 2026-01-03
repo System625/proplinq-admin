@@ -10,14 +10,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { RoleGuard } from '@/components/role-guard';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
   LineChart,
   Line,
   BarChart,
@@ -29,7 +21,6 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import { EscalateIssueDialog } from '@/components/shared/escalate-issue-dialog';
 
 export default function MarketingDashboardPage() {
   return (
@@ -54,7 +45,7 @@ function MarketingDashboardClient() {
   const {
     stats,
     analyticsData,
-    listingPerformance,
+    listingsData,
     funnelData,
     isLoading,
     fetchDashboardData,
@@ -78,7 +69,19 @@ function MarketingDashboardClient() {
     );
   }
 
-  if (!stats) return null;
+  if (!stats) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="py-12">
+            <div className="text-center text-muted-foreground">
+              <p>No dashboard data available. Please check your connection and try refreshing.</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -86,26 +89,26 @@ function MarketingDashboardClient() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Visitors"
-          value={stats.totalVisitors.toLocaleString()}
+          value={(stats.totalVisitors ?? 0).toLocaleString()}
           icon={Users}
           description="All time visitors"
         />
         <StatCard
           title="Total Page Views"
-          value={stats.totalPageViews.toLocaleString()}
+          value={(stats.totalPageViews ?? 0).toLocaleString()}
           icon={Eye}
           description="Pages viewed"
           trend="up"
         />
         <StatCard
           title="Conversion Rate"
-          value={`${stats.conversionRate}%`}
+          value={`${stats.conversionRate ?? 0}%`}
           icon={Target}
           description="Visitor to booking"
         />
         <StatCard
           title="Avg Session"
-          value={stats.avgSessionDuration}
+          value={stats.avgSessionDuration ?? '0m 0s'}
           icon={MousePointerClick}
           description="Session duration"
         />
@@ -118,7 +121,7 @@ function MarketingDashboardClient() {
             <CardTitle className="text-sm font-medium">Bounce Rate</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats.bounceRate}%</div>
+            <div className="text-3xl font-bold">{stats.bounceRate ?? 0}%</div>
             <p className="text-xs text-muted-foreground mt-1">
               Single page visits
             </p>
@@ -130,7 +133,7 @@ function MarketingDashboardClient() {
             <CardTitle className="text-sm font-medium">Top Listing</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-lg font-bold truncate">{stats.topPerformingListing}</div>
+            <div className="text-lg font-bold truncate">{stats.topPerformingListing ?? 'N/A'}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Most viewed property
             </p>
@@ -142,7 +145,7 @@ function MarketingDashboardClient() {
             <CardTitle className="text-sm font-medium">Total Leads</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats.totalLeads.toLocaleString()}</div>
+            <div className="text-3xl font-bold">{(stats.totalLeads ?? 0).toLocaleString()}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Generated leads
             </p>
@@ -154,7 +157,7 @@ function MarketingDashboardClient() {
             <CardTitle className="text-sm font-medium">Qualified Leads</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats.qualifiedLeads.toLocaleString()}</div>
+            <div className="text-3xl font-bold">{(stats.qualifiedLeads ?? 0).toLocaleString()}</div>
             <p className="text-xs text-muted-foreground mt-1">
               High-intent leads
             </p>
@@ -162,40 +165,37 @@ function MarketingDashboardClient() {
         </Card>
       </div>
 
-      {/* Traffic & Conversion Trends */}
+      {/* Traffic Trends */}
       <Card>
         <CardHeader>
-          <CardTitle>Traffic & Conversion Trends</CardTitle>
-          <CardDescription>Daily visitor and conversion metrics (Last 30 days)</CardDescription>
+          <CardTitle>Traffic Trends</CardTitle>
+          <CardDescription>Daily visitor metrics (Last 30 days)</CardDescription>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={analyticsData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" tickFormatter={(value) => new Date(value).getDate().toString()} />
-              <YAxis yAxisId="left" />
-              <YAxis yAxisId="right" orientation="right" />
-              <Tooltip
-                labelFormatter={(value) => new Date(value).toLocaleDateString()}
-                formatter={(value: number) => value.toLocaleString()}
-              />
-              <Legend />
-              <Line
-                yAxisId="left"
-                type="monotone"
-                dataKey="visitors"
-                stroke="#0EA5E9"
-                name="Visitors"
-              />
-              <Line
-                yAxisId="right"
-                type="monotone"
-                dataKey="conversions"
-                stroke="#10B981"
-                name="Conversions"
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          {analyticsData && analyticsData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={analyticsData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" tickFormatter={(value) => new Date(value).getDate().toString()} />
+                <YAxis />
+                <Tooltip
+                  labelFormatter={(value) => new Date(value).toLocaleDateString()}
+                  formatter={(value: number) => value.toLocaleString()}
+                />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="visitors"
+                  stroke="#0EA5E9"
+                  name="Unique Visitors"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+              No traffic data available
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -206,74 +206,81 @@ function MarketingDashboardClient() {
           <CardDescription>User journey from visit to booking</CardDescription>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={funnelData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" />
-              <YAxis dataKey="name" type="category" width={120} />
-              <Tooltip formatter={(value) => value.toLocaleString()} />
-              <Bar dataKey="value" fill="#0EA5E9" />
-            </BarChart>
-          </ResponsiveContainer>
+          {funnelData && funnelData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={funnelData} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" />
+                <YAxis dataKey="name" type="category" width={120} />
+                <Tooltip formatter={(value) => value.toLocaleString()} />
+                <Bar dataKey="value" fill="#0EA5E9" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+              No funnel data available
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Listing Performance */}
+      {/* Listings Overview */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Listing Performance</CardTitle>
-            <CardDescription>Top performing properties by views and bookings</CardDescription>
+            <CardTitle>Listings Overview</CardTitle>
+            <CardDescription>Property listing performance metrics</CardDescription>
           </div>
           <Button variant="outline" size="sm" onClick={refreshListings}>
             Refresh
           </Button>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Property</TableHead>
-                <TableHead>Views</TableHead>
-                <TableHead>Inquiries</TableHead>
-                <TableHead>Bookings</TableHead>
-                <TableHead>Conversion Rate</TableHead>
-                <TableHead>Revenue</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {listingPerformance.slice(0, 10).map((listing) => (
-                <TableRow key={listing.id}>
-                  <TableCell className="font-mono text-sm">{listing.id}</TableCell>
-                  <TableCell className="max-w-xs truncate font-medium">
-                    {listing.property}
-                  </TableCell>
-                  <TableCell>{listing.views.toLocaleString()}</TableCell>
-                  <TableCell>{listing.inquiries.toLocaleString()}</TableCell>
-                  <TableCell>{listing.bookings.toLocaleString()}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={listing.conversionRate >= 1 ? 'default' : 'secondary'}
-                    >
-                      {listing.conversionRate}%
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    ₦{listing.revenue.toLocaleString()}
-                  </TableCell>
-                  <TableCell>
-                    <EscalateIssueDialog
-                      issueId={listing.id}
-                      issueType="general"
-                      fromDepartment="marketing"
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          {listingsData ? (
+            <>
+              <div className="grid gap-4 md:grid-cols-3 mb-6">
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Total Listings</p>
+                  <p className="text-2xl font-bold">{(listingsData.total_listings ?? 0).toLocaleString()}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Active Listings</p>
+                  <p className="text-2xl font-bold">{(listingsData.active_listings ?? 0).toLocaleString()}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">New This Month</p>
+                  <p className="text-2xl font-bold">{(listingsData.new_listings ?? 0).toLocaleString()}</p>
+                </div>
+              </div>
+
+              {/* Property type breakdown */}
+              <div className="space-y-2 mb-4">
+                <p className="text-sm font-medium">By Property Type</p>
+                <div className="grid grid-cols-3 gap-4">
+                  <Badge variant="outline">Hotels: {listingsData.by_type?.hotel ?? 0}</Badge>
+                  <Badge variant="outline">Shortlets: {listingsData.by_type?.shortlet ?? 0}</Badge>
+                  <Badge variant="outline">Apartments: {listingsData.by_type?.apartment ?? 0}</Badge>
+                </div>
+              </div>
+
+              {/* Top locations */}
+              {listingsData.by_location && listingsData.by_location.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Top Locations</p>
+                  <div className="space-y-1">
+                    {listingsData.by_location.slice(0, 5).map((loc) => (
+                      <div key={loc.city} className="flex justify-between text-sm">
+                        <span>{loc.city}</span>
+                        <span className="font-medium">{loc.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">No listing data available</p>
+          )}
         </CardContent>
       </Card>
     </div>

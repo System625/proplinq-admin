@@ -38,8 +38,8 @@ export async function GET(
     }
 
     return NextResponse.json(data);
-  } catch (error) {
-    console.error('Company data GET by ID API error:', error);
+  } catch {
+    console.error('Company data GET by ID API error:');
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
@@ -88,8 +88,8 @@ export async function PUT(
     }
 
     return NextResponse.json(data);
-  } catch (error) {
-    console.error('Company data PUT API error:', error);
+  } catch {
+    console.error('Company data PUT API error:');
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
@@ -151,7 +151,7 @@ export async function DELETE(
 
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Company data DELETE API error:', error);
+    console.error('Company data DELETE API error:');
     return NextResponse.json(
       { message: 'Internal server error', error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
