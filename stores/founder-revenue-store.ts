@@ -23,11 +23,23 @@ export const useFounderRevenueStore = create<FounderRevenueState>((set, get) => 
     set({ isLoading: true, error: null });
     try {
       const data = await apiService.getFounderRevenueDashboard();
+
+      // Additional safety check
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid dashboard data received');
+      }
+
       set({ dashboard: data, isLoading: false });
     } catch (error: any) {
       const errorMessage = getErrorMessage(error);
       set({ error: errorMessage, isLoading: false });
-      toast.error(`Revenue Dashboard Error: ${errorMessage}`);
+      // Keep previous dashboard data instead of clearing it
+      toast.error(`Revenue Dashboard Error: ${errorMessage}`, {
+        action: {
+          label: 'Retry',
+          onClick: () => get().fetchDashboard(),
+        },
+      });
     }
   },
 

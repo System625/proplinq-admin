@@ -449,24 +449,15 @@ export interface EscalationResponse {
 
 // Dashboard Types
 export interface RevenueDashboard {
-  total_revenue: number;
-  monthly_revenue: number;
-  yearly_revenue: number;
-  revenue_growth: number;
-  revenue_by_source: {
-    subscriptions: number;
-    bookings: number;
+  total: number;
+  by_source: {
+    subscriptions: string; // Backend returns as string
     commissions: number;
-    other: number;
+    bookings: number;
   };
-  revenue_trend: Array<{
-    month: string;
-    revenue: number;
-  }>;
-  top_revenue_properties: Array<{
-    property_id: number;
-    property_name: string;
-    revenue: number;
+  trends: Array<{
+    date: string;
+    amount: number;
   }>;
 }
 
@@ -494,18 +485,29 @@ export interface WalletsDashboard {
 }
 
 export interface GrowthDashboard {
-  user_growth_rate: number;
-  revenue_growth_rate: number;
-  booking_growth_rate: number;
-  new_users_this_month: number;
-  active_users: number;
-  user_retention_rate: number;
-  growth_metrics: Array<{
-    metric: string;
-    current: number;
-    previous: number;
-    growth: number;
-  }>;
+  verified_users: {
+    agents: number;
+    hotels: number;
+  };
+  new_signups: {
+    today: number;
+    this_week: number;
+    this_month: number;
+  };
+  onboarding_pipeline: {
+    pending: number;
+    completed: number;
+    completion_rate: number;
+  };
+  kyc_breakdown: {
+    verified: number;
+    flagged: number;
+    failed: number;
+  };
+  user_activity: {
+    active: number;
+    inactive: number;
+  };
 }
 
 export interface PropertyItem {
@@ -547,17 +549,13 @@ export interface PropertiesDashboard {
 }
 
 export interface BookingsDashboard {
-  total_bookings: number;
-  confirmed_bookings: number;
-  pending_bookings: number;
-  cancelled_bookings: number;
-  total_booking_value: number;
-  avg_booking_value: number;
-  booking_trend: Array<{
-    date: string;
-    bookings: number;
-    value: number;
+  trends: Array<{
+    date?: string;
+    bookings?: number;
+    value?: number;
   }>;
+  by_type: Array<any>;
+  conversion_rate: number;
 }
 
 export interface FounderSupportDashboard {

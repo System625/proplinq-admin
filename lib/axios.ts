@@ -177,6 +177,60 @@ import {
   UserActivity,
   UserSupportHistory,
 } from '@/types/api';
+import { ApiError } from './api-error-handler';
+import {
+  validateDashboardStats,
+  validateRevenueDashboard,
+  validateGrowthDashboard,
+  validateSubscriptionsDashboard,
+  validateWalletsDashboard,
+  validatePropertiesDashboard,
+  validateBookingsDashboard,
+  validateFounderSupportDashboard,
+  createEmptyDashboardStats,
+  createEmptyRevenueDashboard,
+  createEmptyGrowthDashboard,
+  createEmptySubscriptionsDashboard,
+  createEmptyWalletsDashboard,
+  createEmptyPropertiesDashboard,
+  createEmptyBookingsDashboard,
+  createEmptyFounderSupportDashboard,
+} from './api-validators';
+
+/**
+ * Safely unwraps API response data with optional validation
+ * @param data - The raw response data
+ * @param validator - Optional validator function to validate and transform data
+ * @param fallback - Optional fallback value if validation fails
+ * @returns Unwrapped and validated data
+ */
+function safeUnwrap<T>(
+  data: unknown,
+  validator?: (data: unknown) => T,
+  fallback?: T
+): T {
+  // Handle null/undefined response
+  if (!data) {
+    if (fallback !== undefined) return fallback;
+    throw new ApiError('No data returned from API', 500);
+  }
+
+  // Unwrap data.data if it exists, otherwise use data directly
+  const unwrapped = (data as Record<string, unknown>).data ?? data;
+
+  // Run validator if provided
+  if (validator) {
+    try {
+      return validator(unwrapped);
+    } catch (error) {
+      console.error('Data validation failed:', error);
+      if (fallback !== undefined) return fallback;
+      throw new ApiError('Invalid data structure received', 500);
+    }
+  }
+
+  return unwrapped as T;
+}
 
 // Production API service
 export const apiService = {
@@ -208,7 +262,7 @@ export const apiService = {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
-    
+
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
@@ -216,17 +270,17 @@ export const apiService = {
     const response = await fetch('/api/dashboard/stats', {
       headers,
     });
-    
+
     console.log('📡 API Service: Dashboard stats response status:', response.status);
-    
+
     if (!response.ok) {
       console.error('❌ API Service: Dashboard stats failed with status:', response.status);
       throw new Error('Failed to fetch dashboard stats');
     }
-    
+
     const data = await response.json();
     console.log('📊 API Service: Dashboard stats data:', data);
-    return data.data;
+    return safeUnwrap(data, validateDashboardStats, createEmptyDashboardStats());
   },
 
   // Users
@@ -871,7 +925,7 @@ export const apiService = {
     const response = await fetch('/api/founder/dashboard/revenue', { headers });
     if (!response.ok) throw new Error('Failed to fetch revenue dashboard');
     const data = await response.json();
-    return data.data;
+    return safeUnwrap(data, validateRevenueDashboard, createEmptyRevenueDashboard());
   },
 
   async getFounderSubscriptionsDashboard(): Promise<SubscriptionsDashboard> {
@@ -882,7 +936,7 @@ export const apiService = {
     const response = await fetch('/api/founder/dashboard/subscriptions', { headers });
     if (!response.ok) throw new Error('Failed to fetch subscriptions dashboard');
     const data = await response.json();
-    return data.data;
+    return safeUnwrap(data, validateSubscriptionsDashboard, createEmptySubscriptionsDashboard());
   },
 
   async getFounderWalletsDashboard(): Promise<WalletsDashboard> {
@@ -893,7 +947,7 @@ export const apiService = {
     const response = await fetch('/api/founder/dashboard/wallets', { headers });
     if (!response.ok) throw new Error('Failed to fetch wallets dashboard');
     const data = await response.json();
-    return data.data;
+    return safeUnwrap(data, validateWalletsDashboard, createEmptyWalletsDashboard());
   },
 
   async getFounderGrowthDashboard(): Promise<GrowthDashboard> {
@@ -904,7 +958,7 @@ export const apiService = {
     const response = await fetch('/api/founder/dashboard/growth', { headers });
     if (!response.ok) throw new Error('Failed to fetch growth dashboard');
     const data = await response.json();
-    return data.data;
+    return safeUnwrap(data, validateGrowthDashboard, createEmptyGrowthDashboard());
   },
 
   async getFounderPropertiesDashboard(): Promise<PropertiesDashboard> {
@@ -915,7 +969,7 @@ export const apiService = {
     const response = await fetch('/api/founder/dashboard/properties', { headers });
     if (!response.ok) throw new Error('Failed to fetch properties dashboard');
     const data = await response.json();
-    return data.data;
+    return safeUnwrap(data, validatePropertiesDashboard, createEmptyPropertiesDashboard());
   },
 
   async getFounderBookingsDashboard(): Promise<BookingsDashboard> {
@@ -926,7 +980,7 @@ export const apiService = {
     const response = await fetch('/api/founder/dashboard/bookings', { headers });
     if (!response.ok) throw new Error('Failed to fetch bookings dashboard');
     const data = await response.json();
-    return data.data;
+    return safeUnwrap(data, validateBookingsDashboard, createEmptyBookingsDashboard());
   },
 
   async getFounderSupportDashboard(): Promise<FounderSupportDashboard> {
@@ -937,7 +991,7 @@ export const apiService = {
     const response = await fetch('/api/founder/dashboard/support', { headers });
     if (!response.ok) throw new Error('Failed to fetch support dashboard');
     const data = await response.json();
-    return data.data;
+    return safeUnwrap(data, validateFounderSupportDashboard, createEmptyFounderSupportDashboard());
   },
 
   // Founder Staff Management APIs

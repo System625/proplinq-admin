@@ -17,6 +17,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { ErrorCard } from '@/components/shared/error-card';
+import { EmptyState } from '@/components/shared/empty-state';
 
 const COLORS = ['#0EA5E9', '#10b981', '#f59e0b', '#8b5cf6'];
 
@@ -42,12 +44,13 @@ export default function FounderRevenuePage() {
 }
 
 function FounderRevenueClient() {
-  const { dashboard, isLoading, fetchDashboard, refreshDashboard } = useFounderRevenueStore();
+  const { dashboard, isLoading, error, fetchDashboard, refreshDashboard } = useFounderRevenueStore();
 
   useEffect(() => {
     fetchDashboard();
   }, [fetchDashboard]);
 
+  // Loading state
   if (isLoading && !dashboard) {
     return (
       <div className="space-y-6">
@@ -61,48 +64,63 @@ function FounderRevenueClient() {
     );
   }
 
-  if (!dashboard) return null;
+  // Error state
+  if (error) {
+    return (
+      <ErrorCard
+        title="Failed to Load Revenue Data"
+        message={error}
+        onRetry={fetchDashboard}
+        showHomeButton
+      />
+    );
+  }
+
+  // No data state
+  if (!dashboard) {
+    return (
+      <EmptyState
+        title="No Revenue Data"
+        description="Unable to load revenue analytics. Please try again."
+        onRetry={fetchDashboard}
+      />
+    );
+  }
+
+  // Safe data access with optional chaining and fallbacks
+  // Convert subscriptions string to number for display
+  const subscriptionsValue = parseFloat(dashboard?.by_source?.subscriptions ?? '0') || 0;
 
   const revenueBySourceData = [
-    { name: 'Subscriptions', value: dashboard.revenue_by_source.subscriptions, color: COLORS[0] },
-    { name: 'Bookings', value: dashboard.revenue_by_source.bookings, color: COLORS[1] },
-    { name: 'Commissions', value: dashboard.revenue_by_source.commissions, color: COLORS[2] },
-    { name: 'Other', value: dashboard.revenue_by_source.other, color: COLORS[3] },
+    { name: 'Subscriptions', value: subscriptionsValue, color: COLORS[0] },
+    { name: 'Bookings', value: dashboard?.by_source?.bookings ?? 0, color: COLORS[1] },
+    { name: 'Commissions', value: dashboard?.by_source?.commissions ?? 0, color: COLORS[2] },
   ];
 
   return (
     <div className="space-y-6">
       {/* Revenue Overview */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <StatCard
           title="Total Revenue"
-          value={`₦${dashboard.total_revenue.toLocaleString()}`}
+          value={`₦${(dashboard?.total ?? 0).toLocaleString()}`}
           icon={DollarSign}
-          description="All-time revenue"
+          description="Total revenue"
           iconClassName="bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300"
         />
         <StatCard
-          title="Monthly Revenue"
-          value={`₦${dashboard.monthly_revenue.toLocaleString()}`}
+          title="Subscriptions"
+          value={`₦${subscriptionsValue.toLocaleString()}`}
           icon={CreditCard}
-          description="This month"
-          trend="up"
+          description="From subscriptions"
           iconClassName="bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300"
         />
         <StatCard
-          title="Yearly Revenue"
-          value={`₦${dashboard.yearly_revenue.toLocaleString()}`}
+          title="Commissions"
+          value={`₦${(dashboard?.by_source?.commissions ?? 0).toLocaleString()}`}
           icon={TrendingUp}
-          description="This year"
+          description="From commissions"
           iconClassName="bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300"
-        />
-        <StatCard
-          title="Revenue Growth"
-          value={`${dashboard.revenue_growth}%`}
-          icon={Percent}
-          description="Growth rate"
-          trend={dashboard.revenue_growth > 0 ? 'up' : 'down'}
-          iconClassName="bg-amber-100 text-amber-600 dark:bg-amber-900 dark:text-amber-300"
         />
       </div>
 
@@ -179,47 +197,35 @@ function FounderRevenueClient() {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>
-            <AreaChart data={dashboard.revenue_trend}>
+            <AreaChart data={dashboard?.trends ?? []}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
+              <XAxis dataKey="date" />
               <YAxis />
               <Tooltip formatter={(value) => `₦${Number(value).toLocaleString()}`} />
-              <Area type="monotone" dataKey="revenue" stroke="#0EA5E9" fill="#0EA5E9" fillOpacity={0.6} />
+              <Area type="monotone" dataKey="amount" stroke="#0EA5E9" fill="#0EA5E9" fillOpacity={0.6} />
             </AreaChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
 
-      {/* Top Revenue Properties */}
+      {/* Revenue Source Breakdown */}
       <Card>
         <CardHeader>
-          <CardTitle>Top Revenue Properties</CardTitle>
-          <CardDescription>Properties generating the most revenue</CardDescription>
+          <CardTitle>Revenue Source Breakdown</CardTitle>
+          <CardDescription>Detailed breakdown of revenue sources</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Property ID</TableHead>
-                <TableHead>Property Name</TableHead>
-                <TableHead className="text-right">Revenue</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {dashboard.top_revenue_properties.map((property) => (
-                <TableRow key={property.property_id}>
-                  <TableCell className="font-mono text-sm">{property.property_id}</TableCell>
-                  <TableCell className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-muted-foreground" />
-                    {property.property_name}
-                  </TableCell>
-                  <TableCell className="text-right font-semibold text-green-600">
-                    ₦{property.revenue.toLocaleString()}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <div className="space-y-4">
+            {revenueBySourceData.map((source) => (
+              <div key={source.name} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: source.color }} />
+                  <span className="font-medium">{source.name}</span>
+                </div>
+                <span className="text-lg font-semibold">₦{source.value.toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     </div>

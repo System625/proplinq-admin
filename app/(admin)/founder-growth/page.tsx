@@ -39,23 +39,95 @@ function FounderGrowthClient() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <StatCard title="User Growth Rate" value={`${dashboard.user_growth_rate}%`} icon={Percent} trend={dashboard.user_growth_rate > 0 ? 'up' : 'down'} iconClassName="bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300" />
-        <StatCard title="Revenue Growth Rate" value={`${dashboard.revenue_growth_rate}%`} icon={DollarSign} trend={dashboard.revenue_growth_rate > 0 ? 'up' : 'down'} iconClassName="bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300" />
-        <StatCard title="Booking Growth Rate" value={`${dashboard.booking_growth_rate}%`} icon={Calendar} trend={dashboard.booking_growth_rate > 0 ? 'up' : 'down'} iconClassName="bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300" />
-      </div>
-
+      {/* New Signups */}
       <div className="grid gap-4 md:grid-cols-3">
-        <StatCard title="New Users This Month" value={dashboard.new_users_this_month.toString()} icon={Users} trend="up" />
-        <StatCard title="Active Users" value={dashboard.active_users.toString()} icon={Activity} />
-        <StatCard title="User Retention Rate" value={`${dashboard.user_retention_rate}%`} icon={TrendingUp} trend="up" />
+        <StatCard
+          title="New Signups Today"
+          value={dashboard.new_signups.today.toString()}
+          icon={Users}
+          trend="up"
+          iconClassName="bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300"
+        />
+        <StatCard
+          title="New Signups This Week"
+          value={dashboard.new_signups.this_week.toString()}
+          icon={Calendar}
+          iconClassName="bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300"
+        />
+        <StatCard
+          title="New Signups This Month"
+          value={dashboard.new_signups.this_month.toString()}
+          icon={TrendingUp}
+          iconClassName="bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300"
+        />
       </div>
 
+      {/* User Activity */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <StatCard
+          title="Active Users"
+          value={dashboard.user_activity.active.toString()}
+          icon={Activity}
+          iconClassName="bg-emerald-100 text-emerald-600 dark:bg-emerald-900 dark:text-emerald-300"
+        />
+        <StatCard
+          title="Inactive Users"
+          value={dashboard.user_activity.inactive.toString()}
+          icon={Users}
+          iconClassName="bg-amber-100 text-amber-600 dark:bg-amber-900 dark:text-amber-300"
+        />
+      </div>
+
+      {/* Verified Users */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Verified Users</CardTitle>
+          <CardDescription>Breakdown of verified users by type</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex justify-between items-center p-4 border rounded-lg">
+              <span className="font-medium">Agents</span>
+              <span className="text-2xl font-bold">{dashboard.verified_users.agents}</span>
+            </div>
+            <div className="flex justify-between items-center p-4 border rounded-lg">
+              <span className="font-medium">Hotels</span>
+              <span className="text-2xl font-bold">{dashboard.verified_users.hotels}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Onboarding Pipeline */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Onboarding Pipeline</CardTitle>
+          <CardDescription>Current onboarding status</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium">Pending</span>
+              <span className="text-lg font-semibold">{dashboard.onboarding_pipeline.pending}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium">Completed</span>
+              <span className="text-lg font-semibold">{dashboard.onboarding_pipeline.completed}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium">Completion Rate</span>
+              <span className="text-lg font-semibold">{dashboard.onboarding_pipeline.completion_rate}%</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* KYC Breakdown */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Growth Metrics Comparison</CardTitle>
-            <CardDescription>Current vs previous period</CardDescription>
+            <CardTitle>KYC Breakdown</CardTitle>
+            <CardDescription>KYC verification status</CardDescription>
           </div>
           <Button variant="outline" size="sm" onClick={refreshDashboard}>Refresh</Button>
         </CardHeader>
@@ -63,23 +135,23 @@ function FounderGrowthClient() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Metric</TableHead>
-                <TableHead className="text-right">Current</TableHead>
-                <TableHead className="text-right">Previous</TableHead>
-                <TableHead className="text-right">Growth</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Count</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {dashboard.growth_metrics.map((metric) => (
-                <TableRow key={metric.metric}>
-                  <TableCell className="font-medium">{metric.metric}</TableCell>
-                  <TableCell className="text-right">{metric.current.toLocaleString()}</TableCell>
-                  <TableCell className="text-right text-muted-foreground">{metric.previous.toLocaleString()}</TableCell>
-                  <TableCell className={`text-right font-semibold ${metric.growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {metric.growth >= 0 ? '+' : ''}{metric.growth}%
-                  </TableCell>
-                </TableRow>
-              ))}
+              <TableRow>
+                <TableCell className="font-medium">Verified</TableCell>
+                <TableCell className="text-right text-green-600 font-semibold">{dashboard.kyc_breakdown.verified}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">Flagged</TableCell>
+                <TableCell className="text-right text-amber-600 font-semibold">{dashboard.kyc_breakdown.flagged}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">Failed</TableCell>
+                <TableCell className="text-right text-red-600 font-semibold">{dashboard.kyc_breakdown.failed}</TableCell>
+              </TableRow>
             </TableBody>
           </Table>
         </CardContent>
