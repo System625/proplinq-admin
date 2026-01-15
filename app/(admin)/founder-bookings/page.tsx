@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Calendar, CheckCircle, Clock, XCircle, DollarSign, TrendingUp } from 'lucide-react';
+import { Calendar, TrendingUp } from 'lucide-react';
 import { useFounderBookingsStore } from '@/stores/founder-bookings-store';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -95,7 +95,7 @@ function FounderBookingsClient() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {dashboard.by_type.map((item: any, index: number) => (
+              {dashboard.by_type.map((item: { type?: string; count?: number }, index: number) => (
                 <div key={index} className="flex justify-between items-center p-3 border rounded-lg">
                   <span className="font-medium">{item.type || 'Unknown'}</span>
                   <span className="text-lg font-semibold">{item.count || 0}</span>

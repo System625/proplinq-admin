@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { TrendingUp, Users, DollarSign, Calendar, Activity, Percent } from 'lucide-react';
+import { TrendingUp, Users, Calendar, Activity } from 'lucide-react';
 import { useFounderGrowthStore } from '@/stores/founder-growth-store';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { Skeleton } from '@/components/ui/skeleton';

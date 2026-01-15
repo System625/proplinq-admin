@@ -1,21 +1,13 @@
 'use client';
 
 import { useEffect } from 'react';
-import { DollarSign, TrendingUp, CreditCard, Percent, Building2 } from 'lucide-react';
+import { DollarSign, TrendingUp, CreditCard } from 'lucide-react';
 import { useFounderRevenueStore } from '@/stores/founder-revenue-store';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RoleGuard } from '@/components/role-guard';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { ErrorCard } from '@/components/shared/error-card';
 import { EmptyState } from '@/components/shared/empty-state';
