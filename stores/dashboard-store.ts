@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { apiService } from '@/lib/axios';
 import { DashboardStats } from '@/types/api';
-import { toast } from 'sonner';
 import { ApiError, getErrorMessage } from '@/lib/api-error-handler';
+import { handleGlobalError } from '@/lib/error-handler';
 
 interface DashboardState {
   stats: DashboardStats | null;
@@ -20,43 +20,43 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 
   fetchStats: async () => {
     set({ isLoading: true, error: null });
-    
+
     try {
-      console.log('Fetching dashboard stats...'); // Debug log
+      console.log('Fetching dashboard stats...');
       const stats = await apiService.getDashboardStats();
-      console.log('Dashboard stats received:', stats); // Debug log
-      set({ 
-        stats, 
-        isLoading: false 
+      console.log('Dashboard stats received:', stats);
+      set({
+        stats,
+        isLoading: false
       });
     } catch (error: any) {
-      console.error('Dashboard stats fetch error:', error); // Debug log
+      console.error('Dashboard stats fetch error:', error);
 
       const errorMessage = getErrorMessage(error);
-      const isAuthError = error instanceof ApiError && error.isAuthError;
 
       set({
         error: errorMessage,
         isLoading: false
       });
 
-      if (isAuthError) {
-        toast.error(errorMessage, {
-          description: 'You may need to log in again',
-          action: {
-            label: 'Login',
-            onClick: () => window.location.href = '/login',
-          },
-        });
-      } else {
-        toast.error(`Dashboard Error: ${errorMessage}`);
-      }
+      // Use centralized error handler
+      handleGlobalError(error, {
+        onAuthError: () => {
+          // Clear auth data and redirect
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('proplinq_admin_token');
+            localStorage.removeItem('proplinq_admin_user');
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 1500);
+          }
+        },
+      });
     }
   },
 
   refreshStats: async () => {
     await get().fetchStats();
-    toast.success('Dashboard stats refreshed');
   },
 
   setStats: (stats: DashboardStats) => {

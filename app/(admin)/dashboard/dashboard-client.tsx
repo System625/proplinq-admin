@@ -26,6 +26,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DashboardStats } from '@/types/api';
+import { ServerErrorState, NetworkErrorState, GenericErrorState } from '@/components/shared/error-state';
 
 export function DashboardClient({
   initialStats,
@@ -112,19 +113,32 @@ export function DashboardClient({
   }
 
   if (error) {
+    // Check if it's a server error (500)
+    if (error.includes('Server error') || error.includes('500')) {
+      return (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <ServerErrorState onRetry={fetchStats} />
+        </div>
+      );
+    }
+
+    // Check if it's a network error
+    if (error.includes('Network') || error.includes('connect')) {
+      return (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <NetworkErrorState onRetry={fetchStats} />
+        </div>
+      );
+    }
+
+    // Generic error fallback
     return (
-      <div className="flex items-center justify-center h-96">
-        <Card className="p-6">
-          <CardContent className="text-center">
-            <p className="text-red-500 mb-4">{error}</p>
-            <button
-              onClick={fetchStats}
-              className="text-proplinq-blue hover:underline"
-            >
-              Try again
-            </button>
-          </CardContent>
-        </Card>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <GenericErrorState
+          title="Failed to Load Dashboard"
+          message={error}
+          onRetry={fetchStats}
+        />
       </div>
     );
   }
