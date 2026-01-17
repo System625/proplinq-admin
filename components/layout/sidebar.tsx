@@ -104,6 +104,12 @@ const navigation: NavigationItem[] = [
   //   feature: 'listings',
   // },
   {
+    name: 'Properties',
+    href: '/properties',
+    icon: Building2,
+    feature: 'properties',
+  },
+  {
     name: 'Bookings',
     href: '/bookings',
     icon: Calendar,

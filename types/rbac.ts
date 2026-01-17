@@ -23,6 +23,7 @@ export type Feature =
   | 'users'
   | 'blog-posts'
   | 'listings'
+  | 'properties'
   | 'bookings'
   | 'transactions'
   | 'kyc'
@@ -73,6 +74,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RoleConfig> = {
       { feature: 'users', level: 'full' },
       { feature: 'blog-posts', level: 'full' },
       { feature: 'listings', level: 'full' },
+      { feature: 'properties', level: 'full' },
       { feature: 'bookings', level: 'full' },
       { feature: 'transactions', level: 'full' },
       { feature: 'kyc', level: 'full' },
@@ -203,6 +205,7 @@ export const FEATURE_ROUTES: Record<Feature, string> = {
   'users': '/users',
   'blog-posts': '/blog-posts',
   'listings': '/listings',
+  'properties': '/properties',
   'bookings': '/bookings',
   'transactions': '/transactions',
   'kyc': '/kyc',

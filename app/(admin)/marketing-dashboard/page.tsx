@@ -165,64 +165,67 @@ function MarketingDashboardClient() {
         </Card>
       </div>
 
-      {/* Traffic Trends */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Traffic Trends</CardTitle>
-          <CardDescription>Daily visitor metrics (Last 30 days)</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {analyticsData && analyticsData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={analyticsData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" tickFormatter={(value) => new Date(value).getDate().toString()} />
-                <YAxis />
-                <Tooltip
-                  labelFormatter={(value) => new Date(value).toLocaleDateString()}
-                  formatter={(value: number) => value.toLocaleString()}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="visitors"
-                  stroke="#0EA5E9"
-                  name="Unique Visitors"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-              No traffic data available
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Charts Side-by-Side */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Traffic Trends */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Traffic Trends</CardTitle>
+            <CardDescription>Daily visitor metrics (Last 30 days)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {analyticsData && analyticsData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={analyticsData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" tickFormatter={(value) => new Date(value).getDate().toString()} />
+                  <YAxis />
+                  <Tooltip
+                    labelFormatter={(value) => new Date(value).toLocaleDateString()}
+                    formatter={(value: number) => value.toLocaleString()}
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="visitors"
+                    stroke="#0EA5E9"
+                    name="Unique Visitors"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                No traffic data available
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-      {/* Conversion Funnel */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Conversion Funnel</CardTitle>
-          <CardDescription>User journey from visit to booking</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {funnelData && funnelData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={funnelData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis dataKey="name" type="category" width={120} />
-                <Tooltip formatter={(value) => value.toLocaleString()} />
-                <Bar dataKey="value" fill="#0EA5E9" />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-              No funnel data available
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        {/* Conversion Funnel */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Conversion Funnel</CardTitle>
+            <CardDescription>User journey from visit to booking</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {funnelData && funnelData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={funnelData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis dataKey="name" type="category" width={120} />
+                  <Tooltip formatter={(value) => value.toLocaleString()} />
+                  <Bar dataKey="value" fill="#0EA5E9" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                No funnel data available
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Listings Overview */}
       <Card>

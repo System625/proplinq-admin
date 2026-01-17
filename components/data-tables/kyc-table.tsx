@@ -20,7 +20,6 @@ import { ChevronLeft, ChevronRight, Eye, FileText, User, Building, CreditCard, C
 import { DocumentButtons } from './document-buttons';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { KycReviewModal } from '@/components/modals/kyc-review-modal';
-import { toast } from 'sonner';
 
 const statusColors = {
   pending: 'secondary',
@@ -105,14 +104,10 @@ export function KycTable() {
         action: reviewData.action,
         reason: reviewData.reason || undefined,
       });
-      
-      toast.success(`KYC verification ${reviewData.action === 'approve' ? 'approved' : 'rejected'} successfully`);
+
       handleReviewModalClose();
-      // Refresh data
-      fetchVerifications();
-      fetchStatusCounts();
     } catch {
-      toast.error(`Failed to ${reviewData.action} KYC verification`);
+      // Error toast is already shown by the store
     } finally {
       setIsSubmitting(false);
     }

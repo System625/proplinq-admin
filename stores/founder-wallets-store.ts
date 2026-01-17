@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { apiService } from '@/lib/axios';
+import { founderApiService } from '@/lib/api';
 import { WalletsDashboard } from '@/types/api';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/api-error-handler';
@@ -22,7 +22,7 @@ export const useFounderWalletsStore = create<FounderWalletsState>((set, get) => 
   fetchDashboard: async () => {
     set({ isLoading: true, error: null });
     try {
-      const data = await apiService.getFounderWalletsDashboard();
+      const data = await founderApiService.getFounderWalletsDashboard();
       set({ dashboard: data, isLoading: false });
     } catch (error: any) {
       const errorMessage = getErrorMessage(error);

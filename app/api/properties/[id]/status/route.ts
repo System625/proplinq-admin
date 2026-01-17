@@ -7,22 +7,19 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
+    const authorization = request.headers.get('authorization');
     const body = await request.json();
 
-    // Get authorization token from request headers
-    const authorization = request.headers.get('authorization');
-    
     const headers: Record<string, string> = {
-      'Accept': 'application/json',
+      Accept: 'application/json',
       'Content-Type': 'application/json',
     };
-    
+
     if (authorization) {
       headers['Authorization'] = authorization;
     }
 
-    const response = await fetch(`${API_BASE_URL}/admin/kyc/${id}/verify`, {
+    const response = await fetch(`${API_BASE_URL}/properties/${params.id}`, {
       method: 'POST',
       headers,
       body: JSON.stringify(body),
@@ -32,14 +29,14 @@ export async function POST(
 
     if (!response.ok) {
       return NextResponse.json(
-        { message: data.message || 'Failed to review KYC verification' },
+        { message: data.message || 'Failed to update property status' },
         { status: response.status }
       );
     }
 
     return NextResponse.json(data);
-  } catch {
-    console.error('KYC review API error:');
+  } catch (error) {
+    console.error('Property status update API error:', error);
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { toast } from 'sonner';
-import { apiService } from '@/lib/axios';
+import { supportApiService } from '@/lib/api';
 import {
   SupportDashboard,
   Ticket,
@@ -156,9 +156,9 @@ export const useSupportDashboardStore = create<SupportDashboardState>((set, get)
     try {
       // Fetch all dashboard data concurrently with Promise.allSettled for partial failure handling
       const [dashboardResult, ticketsResult, chatsResult] = await Promise.allSettled([
-        apiService.getSupportDashboard(),
-        apiService.listTickets({ limit: 15, page: 1 }),
-        apiService.listChats({ status: 'active' }),
+        supportApiService.getSupportDashboard(),
+        supportApiService.listTickets({ limit: 15, page: 1 }),
+        supportApiService.listChats({ status: 'active' }),
       ]);
 
       // Handle dashboard stats
@@ -260,7 +260,7 @@ export const useSupportDashboardStore = create<SupportDashboardState>((set, get)
     set({ isTicketLoading: true });
 
     try {
-      const tickets = await apiService.listTickets(params);
+      const tickets = await supportApiService.listTickets(params);
       set({ tickets, isTicketLoading: false });
     } catch (error) {
       const errorMessage = getErrorMessage(error);
@@ -274,7 +274,7 @@ export const useSupportDashboardStore = create<SupportDashboardState>((set, get)
     set({ isTicketDetailLoading: true, selectedTicket: null });
 
     try {
-      const ticket = await apiService.getTicket(ticketId);
+      const ticket = await supportApiService.getTicket(ticketId);
       set({ selectedTicket: ticket, isTicketDetailLoading: false });
     } catch (error) {
       const errorMessage = getErrorMessage(error);
@@ -291,7 +291,7 @@ export const useSupportDashboardStore = create<SupportDashboardState>((set, get)
       // TODO: Handle file attachments when backend supports it
       // For now, we'll just send the message
 
-      await apiService.respondToTicket(ticketId, data);
+      await supportApiService.respondToTicket(ticketId, data);
       toast.success('Response added successfully');
 
       // Refresh ticket details to show new response
@@ -307,7 +307,7 @@ export const useSupportDashboardStore = create<SupportDashboardState>((set, get)
   assignTicket: async (ticketId: number, agentId: number) => {
     try {
       const data: AssignTicketRequest = { agent_id: agentId };
-      await apiService.assignTicket(ticketId, data);
+      await supportApiService.assignTicket(ticketId, data);
       toast.success('Ticket assigned successfully');
 
       // Refresh ticket details
@@ -329,7 +329,7 @@ export const useSupportDashboardStore = create<SupportDashboardState>((set, get)
         status: status as any,
         priority: priority as any
       };
-      await apiService.updateTicket(ticketId, data);
+      await supportApiService.updateTicket(ticketId, data);
       toast.success('Ticket updated successfully');
 
       // Refresh ticket details
@@ -348,7 +348,7 @@ export const useSupportDashboardStore = create<SupportDashboardState>((set, get)
   closeTicket: async (ticketId: number, resolution?: string) => {
     try {
       const data: CloseTicketRequest | undefined = resolution ? { resolution } : undefined;
-      await apiService.closeTicket(ticketId, data);
+      await supportApiService.closeTicket(ticketId, data);
       toast.success('Ticket closed successfully');
 
       // Refresh ticket details
@@ -374,7 +374,7 @@ export const useSupportDashboardStore = create<SupportDashboardState>((set, get)
     set({ isChatLoading: true });
 
     try {
-      const chats = await apiService.listChats(params);
+      const chats = await supportApiService.listChats(params);
       set({ chats, isChatLoading: false });
     } catch (error) {
       const errorMessage = getErrorMessage(error);
@@ -388,7 +388,7 @@ export const useSupportDashboardStore = create<SupportDashboardState>((set, get)
     set({ isChatDetailLoading: true, selectedChat: null });
 
     try {
-      const chat = await apiService.getChat(chatId);
+      const chat = await supportApiService.getChat(chatId);
       set({ selectedChat: chat, isChatDetailLoading: false });
     } catch (error) {
       const errorMessage = getErrorMessage(error);
@@ -401,7 +401,7 @@ export const useSupportDashboardStore = create<SupportDashboardState>((set, get)
   respondToChat: async (chatId: number, message: string) => {
     try {
       const data: RespondToChatRequest = { message };
-      await apiService.respondToChat(chatId, data);
+      await supportApiService.respondToChat(chatId, data);
       toast.success('Message sent successfully');
 
       // Refresh chat details to show new message
@@ -417,7 +417,7 @@ export const useSupportDashboardStore = create<SupportDashboardState>((set, get)
   assignChat: async (chatId: number, agentId: number) => {
     try {
       const data: AssignChatRequest = { agent_id: agentId };
-      await apiService.assignChat(chatId, data);
+      await supportApiService.assignChat(chatId, data);
       toast.success('Chat assigned successfully');
 
       // Refresh chat details
@@ -436,7 +436,7 @@ export const useSupportDashboardStore = create<SupportDashboardState>((set, get)
   closeChat: async (chatId: number, summary?: string) => {
     try {
       const data: CloseChatRequest | undefined = summary ? { summary } : undefined;
-      await apiService.closeChat(chatId, data);
+      await supportApiService.closeChat(chatId, data);
       toast.success('Chat closed successfully');
 
       // Refresh chat details
@@ -464,7 +464,7 @@ export const useSupportDashboardStore = create<SupportDashboardState>((set, get)
   fetchCalls: async (params?: CallQueryParams) => {
     set({ isCallLoading: true });
     try {
-      const calls = await apiService.listCalls(params);
+      const calls = await supportApiService.listCalls(params);
       set({ calls, isCallLoading: false });
     } catch (error) {
       const message = getErrorMessage(error);
@@ -477,7 +477,7 @@ export const useSupportDashboardStore = create<SupportDashboardState>((set, get)
   fetchCallDetails: async (callId: number) => {
     set({ isCallDetailLoading: true });
     try {
-      const call = await apiService.getCall(callId);
+      const call = await supportApiService.getCall(callId);
       set({ selectedCall: call, isCallDetailLoading: false });
     } catch (error) {
       const message = getErrorMessage(error);
@@ -489,7 +489,7 @@ export const useSupportDashboardStore = create<SupportDashboardState>((set, get)
 
   scheduleCallback: async (callId: number, data: ScheduleCallbackRequest) => {
     try {
-      const updatedCall = await apiService.scheduleCallback(callId, data);
+      const updatedCall = await supportApiService.scheduleCallback(callId, data);
       set({ selectedCall: updatedCall });
       toast.success('Callback scheduled successfully');
 
@@ -525,7 +525,7 @@ export const useSupportDashboardStore = create<SupportDashboardState>((set, get)
   fetchEmails: async (params?: EmailQueryParams) => {
     set({ isEmailLoading: true });
     try {
-      const emails = await apiService.listEmails(params);
+      const emails = await supportApiService.listEmails(params);
       set({ emails, isEmailLoading: false });
     } catch (error) {
       const message = getErrorMessage(error);
@@ -538,7 +538,7 @@ export const useSupportDashboardStore = create<SupportDashboardState>((set, get)
   fetchEmailDetails: async (emailId: number) => {
     set({ isEmailDetailLoading: true });
     try {
-      const email = await apiService.getEmail(emailId);
+      const email = await supportApiService.getEmail(emailId);
       set({ selectedEmail: email, isEmailDetailLoading: false });
     } catch (error) {
       const message = getErrorMessage(error);
@@ -550,7 +550,7 @@ export const useSupportDashboardStore = create<SupportDashboardState>((set, get)
 
   replyToEmail: async (emailId: number, data: ReplyToEmailRequest) => {
     try {
-      const updatedEmail = await apiService.replyToEmail(emailId, data);
+      const updatedEmail = await supportApiService.replyToEmail(emailId, data);
       set({ selectedEmail: updatedEmail });
       toast.success('Email reply sent successfully');
 
@@ -586,7 +586,7 @@ export const useSupportDashboardStore = create<SupportDashboardState>((set, get)
   fetchAnalytics: async (params?: AnalyticsQueryParams) => {
     set({ isAnalyticsLoading: true });
     try {
-      const analytics = await apiService.getSupportAnalytics(params);
+      const analytics = await supportApiService.getSupportAnalytics(params);
       set({ analytics, isAnalyticsLoading: false });
     } catch (error) {
       const message = getErrorMessage(error);
@@ -608,7 +608,7 @@ export const useSupportDashboardStore = create<SupportDashboardState>((set, get)
 
   fetchUserSupportHistory: async (userId: number) => {
     try {
-      const history = await apiService.getUserSupportHistory(userId);
+      const history = await supportApiService.getUserSupportHistory(userId);
       return history;
     } catch (error) {
       const message = getErrorMessage(error);

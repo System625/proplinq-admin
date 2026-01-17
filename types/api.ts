@@ -523,10 +523,11 @@ export interface PropertyItem {
   bathrooms: number | null;
   gated: boolean;
   parking: boolean;
-  features: string[];
+  features: string[] | null;
   status: string;
   views_count: number;
   is_promoted: boolean;
+  is_featured: boolean;
   promoted_at: string | null;
   video_url: string | null;
   created_at: string;
@@ -539,6 +540,8 @@ export interface PropertyItem {
   average_rating: string | null;
   rating_count: number;
   bookings_count?: number;
+  images_full_urls?: string[];
+  property_360_images_full_urls?: Array<{ id: number; url: string }>;
 }
 
 export interface PropertiesDashboard {
@@ -546,6 +549,30 @@ export interface PropertiesDashboard {
   new_this_month: number;
   most_viewed: PropertyItem[];
   most_booked: PropertyItem[];
+}
+
+// Properties Management Types
+export interface ListPropertiesResponse {
+  status: boolean;
+  message: string;
+  data: PropertyItem[];
+}
+
+export interface UpdatePropertyListingRequest {
+  title?: string;
+  description?: string;
+  price?: number;
+  location?: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  gated?: boolean;
+  parking?: boolean;
+  features?: string[];
+  status?: 'available' | 'pending' | 'rejected';
+}
+
+export interface UpdatePropertyListingStatusRequest {
+  status: 'available' | 'rejected';
 }
 
 export interface BookingsDashboard {
@@ -567,16 +594,40 @@ export interface FounderSupportDashboard {
 }
 
 // Staff Management Types
+export interface StaffPermission {
+  id: number;
+  user_id: number;
+  permission: string;
+  granted: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Staff {
   id: number;
-  name: string;
+  full_name: string;
   email: string;
-  phone_number: string;
+  email_verified_at: string | null;
   role: 'admin' | 'support' | 'operations' | 'sales' | 'marketing';
+  phone_number: string;
+  phone_verified_at: string | null;
+  location: string;
+  terms_accepted: boolean;
   is_suspended: boolean;
-  permissions: string[];
   created_at: string;
-  last_login_at?: string;
+  free_listing_expires_at: string | null;
+  free_listing_active: boolean;
+  updated_at: string;
+  last_seen_at: string | null;
+  agency_name: string | null;
+  agent_type: string | null;
+  whatsapp_number: string | null;
+  google_id: string | null;
+  apple_id: string | null;
+  profile_image: string | null;
+  profile_image_full_url: string | null;
+  is_online: boolean;
+  staff_permissions: StaffPermission[];
 }
 
 export interface ListStaffResponse {

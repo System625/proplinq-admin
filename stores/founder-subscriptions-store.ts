@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { apiService } from '@/lib/axios';
+import { founderApiService } from '@/lib/api';
 import { SubscriptionsDashboard } from '@/types/api';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/api-error-handler';
@@ -22,7 +22,7 @@ export const useFounderSubscriptionsStore = create<FounderSubscriptionsState>((s
   fetchDashboard: async () => {
     set({ isLoading: true, error: null });
     try {
-      const data = await apiService.getFounderSubscriptionsDashboard();
+      const data = await founderApiService.getFounderSubscriptionsDashboard();
       set({ dashboard: data, isLoading: false });
     } catch (error: any) {
       const errorMessage = getErrorMessage(error);

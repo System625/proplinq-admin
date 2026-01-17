@@ -160,23 +160,18 @@ export const useKycStore = create<KycState>((set, get) => ({
 
   reviewVerification: async (id: string, data: KycReview) => {
     set({ isReviewing: true });
-    
+
     try {
-      const updatedVerification = await apiService.reviewKycVerification(id, data);
-      
-      const { verifications } = get();
-      const updatedVerifications = verifications.map(verification =>
-        verification.id === parseInt(id) ? updatedVerification : verification
-      );
-      
-      set({
-        verifications: updatedVerifications,
-        currentVerification: updatedVerification,
-        isReviewing: false,
-      });
-      
+      await apiService.reviewKycVerification(id, data);
+
+      set({ isReviewing: false });
+
       const action = data.action === 'approve' ? 'approved' : 'rejected';
       toast.success(`KYC verification ${action} successfully`);
+
+      // Refetch data to get updated verification with complete user object
+      await get().fetchVerifications();
+      await get().fetchStatusCounts();
     } catch (error: any) {
       set({ isReviewing: false });
 

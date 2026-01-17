@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { apiService } from '@/lib/axios';
+import { founderApiService } from '@/lib/api';
 import {
   ApproveKYCOverrideRequest,
   DeclineKYCOverrideRequest,
@@ -27,7 +27,7 @@ export const useFounderOverridesStore = create<FounderOverridesState>((set) => (
   approveKyc: async (id, data) => {
     set({ isLoading: true, error: null });
     try {
-      await apiService.approveKycOverride(id, data);
+      await founderApiService.approveKycOverride(id, data);
       set({ isLoading: false });
       toast.success('KYC approved successfully');
     } catch (error: any) {
@@ -41,7 +41,7 @@ export const useFounderOverridesStore = create<FounderOverridesState>((set) => (
   declineKyc: async (id, data) => {
     set({ isLoading: true, error: null });
     try {
-      await apiService.declineKycOverride(id, data);
+      await founderApiService.declineKycOverride(id, data);
       set({ isLoading: false });
       toast.success('KYC declined successfully');
     } catch (error: any) {
@@ -55,7 +55,7 @@ export const useFounderOverridesStore = create<FounderOverridesState>((set) => (
   overrideSubscription: async (id, data) => {
     set({ isLoading: true, error: null });
     try {
-      await apiService.overrideSubscription(id, data);
+      await founderApiService.overrideSubscription(id, data);
       set({ isLoading: false });
       toast.success('Subscription override applied successfully');
     } catch (error: any) {
@@ -69,7 +69,7 @@ export const useFounderOverridesStore = create<FounderOverridesState>((set) => (
   overridePayment: async (id, data) => {
     set({ isLoading: true, error: null });
     try {
-      await apiService.overridePayment(id, data);
+      await founderApiService.overridePayment(id, data);
       set({ isLoading: false });
       toast.success('Payment override applied successfully');
     } catch (error: any) {

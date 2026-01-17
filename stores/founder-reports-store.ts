@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { apiService } from '@/lib/axios';
+import { founderApiService } from '@/lib/api';
 import { ExecutiveReport } from '@/types/api';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/api-error-handler';
@@ -26,7 +26,7 @@ export const useFounderReportsStore = create<FounderReportsState>((set) => ({
   fetchExecutiveReport: async (params) => {
     set({ isLoading: true, error: null });
     try {
-      const data = await apiService.getFounderExecutiveReport(params);
+      const data = await founderApiService.getFounderExecutiveReport(params);
       set({ executiveReport: data, isLoading: false });
     } catch (error: any) {
       const errorMessage = getErrorMessage(error);

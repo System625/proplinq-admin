@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { apiService } from '@/lib/axios';
+import { founderApiService } from '@/lib/api';
 import {
   Discount,
   ListDiscountsResponse,
@@ -32,7 +32,7 @@ export const useFounderDiscountsStore = create<FounderDiscountsState>((set, get)
   fetchDiscounts: async (params) => {
     set({ isLoading: true, error: null });
     try {
-      const data = await apiService.listFounderDiscounts(params);
+      const data = await founderApiService.listFounderDiscounts(params);
       set({ discounts: data, isLoading: false });
     } catch (error: any) {
       const errorMessage = getErrorMessage(error);
@@ -44,7 +44,7 @@ export const useFounderDiscountsStore = create<FounderDiscountsState>((set, get)
   fetchDiscountById: async (id) => {
     set({ isLoading: true, error: null });
     try {
-      const data = await apiService.getFounderDiscount(id);
+      const data = await founderApiService.getFounderDiscount(id);
       set({ selectedDiscount: data, isLoading: false });
     } catch (error: any) {
       const errorMessage = getErrorMessage(error);
@@ -56,7 +56,7 @@ export const useFounderDiscountsStore = create<FounderDiscountsState>((set, get)
   createDiscount: async (data) => {
     set({ isLoading: true, error: null });
     try {
-      await apiService.createFounderDiscount(data);
+      await founderApiService.createFounderDiscount(data);
       await get().fetchDiscounts();
       toast.success('Discount created successfully');
     } catch (error: any) {
@@ -70,7 +70,7 @@ export const useFounderDiscountsStore = create<FounderDiscountsState>((set, get)
   updateDiscount: async (id, data) => {
     set({ isLoading: true, error: null });
     try {
-      await apiService.updateFounderDiscount(id, data);
+      await founderApiService.updateFounderDiscount(id, data);
       await get().fetchDiscounts();
       toast.success('Discount updated successfully');
     } catch (error: any) {
@@ -84,7 +84,7 @@ export const useFounderDiscountsStore = create<FounderDiscountsState>((set, get)
   deleteDiscount: async (id) => {
     set({ isLoading: true, error: null });
     try {
-      await apiService.deleteFounderDiscount(id);
+      await founderApiService.deleteFounderDiscount(id);
       await get().fetchDiscounts();
       toast.success('Discount deleted successfully');
     } catch (error: any) {

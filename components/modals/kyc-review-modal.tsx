@@ -28,8 +28,7 @@ export function KycReviewModal({
   isSubmitting,
   reviewData,
   onClose,
-  onSubmit,
-  onActionChange,
+  onSubmit,  
   onReasonChange,
 }: KycReviewModalProps) {
   if (!isOpen || !selectedVerification) return null;
@@ -158,32 +157,7 @@ export function KycReviewModal({
             </div>
 
             {/* Review Section */}
-            <div className="p-6 space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                  Review Decision
-                </label>
-                <div className="flex space-x-3">
-                  <Button
-                    type="button"
-                    variant={isApproval ? "default" : "outline"}
-                    onClick={() => onActionChange('approve')}
-                    className={isApproval ? "bg-green-600 hover:bg-green-700 text-white" : ""}
-                  >
-                    <Check className="w-4 h-4 mr-2" />
-                    Approve
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={isRejection ? "destructive" : "outline"}
-                    onClick={() => onActionChange('reject')}
-                  >
-                    <X className="w-4 h-4 mr-2" />
-                    Reject
-                  </Button>
-                </div>
-              </div>
-
+            <div className="p-6 space-y-6">              
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {isRejection ? 'Rejection Reason' : 'Review Notes'} {isRejection && <span className="text-red-500">*</span>}

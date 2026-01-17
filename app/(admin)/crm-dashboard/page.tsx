@@ -1,5 +1,5 @@
 import { RoleGuard } from '@/components/role-guard';
-import { CRMDashboardClient } from './crm-dashboard-client';
+import { CRMDashboardClient } from '@/components/crm/crm-dashboard-client';
 
 export default function CRMDashboardPage() {
   return (

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { apiService } from '@/lib/axios';
+import { founderApiService } from '@/lib/api';
 import { RevenueDashboard } from '@/types/api';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/api-error-handler';
@@ -22,7 +22,7 @@ export const useFounderRevenueStore = create<FounderRevenueState>((set, get) => 
   fetchDashboard: async () => {
     set({ isLoading: true, error: null });
     try {
-      const data = await apiService.getFounderRevenueDashboard();
+      const data = await founderApiService.getFounderRevenueDashboard();
 
       // Additional safety check
       if (!data || typeof data !== 'object') {

@@ -32,6 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { format } from 'date-fns';
 import { DashboardSearch } from '@/components/shared/dashboard-search';
@@ -72,9 +73,75 @@ function OperationsDashboardClient() {
   } = useOperationsDashboardStore();
 
   const [showAgentsByWeek, setShowAgentsByWeek] = useState(true);
+  const [subscriptionsPage, setSubscriptionsPage] = useState(1);
+  const [transactionsPage, setTransactionsPage] = useState(1);
+  const itemsPerPage = 10;
 
   const filteredSubscriptions = getFilteredSubscriptions();
   const filteredTransactions = getFilteredTransactions();
+
+  const renderPagination = (currentPage: number, totalItems: number, onPageChange: (page: number) => void) => {
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+    if (totalItems === 0) return null;
+
+    return (
+      <div className="flex items-center justify-between px-2 py-4">
+        <div className="text-sm text-muted-foreground">
+          Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} items
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </Button>
+          <div className="flex items-center gap-1">
+            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+              return (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => onPageChange(pageNum)}
+                  className="w-8 h-8 p-0"
+                >
+                  {pageNum}
+                </Button>
+              );
+            })}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  const getPaginatedData = <T,>(data: T[], page: number): T[] => {
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return data.slice(startIndex, endIndex);
+  };
 
   useEffect(() => {
     fetchDashboardData();
@@ -412,215 +479,226 @@ function OperationsDashboardClient() {
         </Card>
       </div>
 
-      {/* Revenue Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Revenue Trends</CardTitle>
-          <CardDescription>Monthly revenue overview</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={revenueChart}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip formatter={(value) => `₦${Number(value).toLocaleString()}`} />
-              <Legend />
-              <Bar dataKey="revenue" fill="#0EA5E9" name="Revenue" />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* Subscription Sales Chart */}
-      {stats.salesMetrics && (
+      {/* Charts Side-by-Side */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Revenue Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Subscription Sales</CardTitle>
-            <CardDescription>Monthly subscription sales breakdown</CardDescription>
+            <CardTitle>Revenue Trends</CardTitle>
+            <CardDescription>Monthly revenue overview</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={stats.salesMetrics.subscriptionSales}>
+              <BarChart data={revenueChart}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
+                <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip formatter={(value) => `₦${Number(value).toLocaleString()}`} />
                 <Legend />
-                <Bar dataKey="amount" fill="#10b981" name="Sales Amount" />
+                <Bar dataKey="revenue" fill="#0EA5E9" name="Revenue" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
-      )}
 
-      {/* Subscriptions Table */}
+        {/* Subscription Sales Chart */}
+        {stats.salesMetrics && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Subscription Sales</CardTitle>
+              <CardDescription>Monthly subscription sales breakdown</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={stats.salesMetrics.subscriptionSales}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip formatter={(value) => `₦${Number(value).toLocaleString()}`} />
+                  <Legend />
+                  <Bar dataKey="amount" fill="#10b981" name="Sales Amount" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Subscriptions and Transactions Tabs */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Recent Subscriptions</CardTitle>
-            <CardDescription>
-              Latest subscription activity ({filteredSubscriptions.length} results)
-            </CardDescription>
+            <CardTitle>Financial Management</CardTitle>
+            <CardDescription>Manage subscriptions and wallet transactions</CardDescription>
           </div>
           <Button variant="outline" size="sm" onClick={refreshSubscriptions}>
             Refresh
           </Button>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
-            <DashboardSearch
-              placeholder="Search subscriptions by ID, partner, or plan..."
-              onSearch={setSubscriptionSearchQuery}
-              defaultValue={subscriptionSearchQuery}
-            />
-          </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Partner</TableHead>
-                <TableHead>Plan</TableHead>
-                <TableHead>MRR</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Next Billing</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredSubscriptions.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    No subscriptions found matching your search
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredSubscriptions.slice(0, 10).map((sub) => (
-                  <TableRow key={sub.id}>
-                    <TableCell className="font-mono text-sm">{sub.id}</TableCell>
-                    <TableCell>{sub.partner}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{sub.plan}</Badge>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      ₦{sub.mrr.toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          sub.status === 'active'
-                            ? 'default'
-                            : sub.status === 'pending'
-                            ? 'secondary'
-                            : 'destructive'
-                        }
-                        className="capitalize"
-                      >
-                        {sub.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {format(new Date(sub.next_billing), 'MMM d, yyyy')}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <EscalateIssueDialog
-                        issueId={sub.id}
-                        issueType="general"
-                        fromDepartment="operations"
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+          <Tabs defaultValue="subscriptions" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="subscriptions">
+                <CreditCard className="h-4 w-4 mr-2" />
+                Subscriptions
+              </TabsTrigger>
+              <TabsTrigger value="transactions">
+                <DollarSign className="h-4 w-4 mr-2" />
+                Transactions
+              </TabsTrigger>
+            </TabsList>
 
-      {/* Recent Transactions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Wallet Transactions</CardTitle>
-          <CardDescription>
-            Latest wallet activity ({filteredTransactions.length} results)
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4">
-            <DashboardSearch
-              placeholder="Search transactions by ID, user, or type..."
-              onSearch={setTransactionSearchQuery}
-              defaultValue={transactionSearchQuery}
-            />
-          </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>User</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTransactions.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    No transactions found matching your search
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredTransactions.slice(0, 10).map((txn) => (
-                  <TableRow key={txn.id}>
-                    <TableCell className="font-mono text-sm">{txn.id}</TableCell>
-                    <TableCell>{txn.user}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="capitalize">
-                        {txn.type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell
-                      className={
-                        txn.type === 'deposit' || txn.type === 'commission'
-                          ? 'text-green-600 font-medium'
-                          : 'text-red-600 font-medium'
-                      }
-                    >
-                      {txn.type === 'deposit' || txn.type === 'commission' ? '+' : '-'}
-                      ₦{txn.amount.toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          txn.status === 'completed'
-                            ? 'default'
-                            : txn.status === 'pending'
-                            ? 'secondary'
-                            : 'destructive'
-                        }
-                        className="capitalize"
-                      >
-                        {txn.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {format(new Date(txn.created_at), 'MMM d, HH:mm')}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <EscalateIssueDialog
-                        issueId={txn.id}
-                        issueType="general"
-                        fromDepartment="operations"
-                      />
-                    </TableCell>
+            {/* Subscriptions Tab */}
+            <TabsContent value="subscriptions" className="mt-4">
+              <div className="mb-4">
+                <DashboardSearch
+                  placeholder="Search subscriptions by ID, partner, or plan..."
+                  onSearch={setSubscriptionSearchQuery}
+                  defaultValue={subscriptionSearchQuery}
+                />
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Partner</TableHead>
+                    <TableHead>Plan</TableHead>
+                    <TableHead>MRR</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Next Billing</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                </TableHeader>
+                <TableBody>
+                  {getPaginatedData(filteredSubscriptions, subscriptionsPage).length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                        No subscriptions found matching your search
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    getPaginatedData(filteredSubscriptions, subscriptionsPage).map((sub) => (
+                      <TableRow key={sub.id}>
+                        <TableCell className="font-mono text-sm">{sub.id}</TableCell>
+                        <TableCell>{sub.partner}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{sub.plan}</Badge>
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          ₦{sub.mrr.toLocaleString()}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              sub.status === 'active'
+                                ? 'default'
+                                : sub.status === 'pending'
+                                ? 'secondary'
+                                : 'destructive'
+                            }
+                            className="capitalize"
+                          >
+                            {sub.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {format(new Date(sub.next_billing), 'MMM d, yyyy')}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <EscalateIssueDialog
+                            issueId={sub.id}
+                            issueType="general"
+                            fromDepartment="operations"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+              {renderPagination(subscriptionsPage, filteredSubscriptions.length, setSubscriptionsPage)}
+            </TabsContent>
+
+            {/* Transactions Tab */}
+            <TabsContent value="transactions" className="mt-4">
+              <div className="mb-4">
+                <DashboardSearch
+                  placeholder="Search transactions by ID, user, or type..."
+                  onSearch={setTransactionSearchQuery}
+                  defaultValue={transactionSearchQuery}
+                />
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>User</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {getPaginatedData(filteredTransactions, transactionsPage).length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                        No transactions found matching your search
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    getPaginatedData(filteredTransactions, transactionsPage).map((txn) => (
+                      <TableRow key={txn.id}>
+                        <TableCell className="font-mono text-sm">{txn.id}</TableCell>
+                        <TableCell>{txn.user}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="capitalize">
+                            {txn.type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell
+                          className={
+                            txn.type === 'deposit' || txn.type === 'commission'
+                              ? 'text-green-600 font-medium'
+                              : 'text-red-600 font-medium'
+                          }
+                        >
+                          {txn.type === 'deposit' || txn.type === 'commission' ? '+' : '-'}
+                          ₦{txn.amount.toLocaleString()}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              txn.status === 'completed'
+                                ? 'default'
+                                : txn.status === 'pending'
+                                ? 'secondary'
+                                : 'destructive'
+                            }
+                            className="capitalize"
+                          >
+                            {txn.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {format(new Date(txn.created_at), 'MMM d, HH:mm')}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <EscalateIssueDialog
+                            issueId={txn.id}
+                            issueType="general"
+                            fromDepartment="operations"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+              {renderPagination(transactionsPage, filteredTransactions.length, setTransactionsPage)}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>

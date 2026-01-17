@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { apiService } from '@/lib/axios';
+import { founderApiService } from '@/lib/api';
 import { Staff, ListStaffResponse, CreateStaffRequest, UpdateStaffRequest, UpdatePermissionsRequest } from '@/types/api';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/api-error-handler';
@@ -28,7 +28,7 @@ export const useFounderStaffStore = create<FounderStaffState>((set, get) => ({
   fetchStaff: async (params) => {
     set({ isLoading: true, error: null });
     try {
-      const data = await apiService.listFounderStaff(params);
+      const data = await founderApiService.listFounderStaff(params);
       set({ staff: data, isLoading: false });
     } catch (error: any) {
       const errorMessage = getErrorMessage(error);
@@ -40,7 +40,7 @@ export const useFounderStaffStore = create<FounderStaffState>((set, get) => ({
   fetchStaffById: async (id) => {
     set({ isLoading: true, error: null });
     try {
-      const data = await apiService.getFounderStaff(id);
+      const data = await founderApiService.getFounderStaff(id);
       set({ selectedStaff: data, isLoading: false });
     } catch (error: any) {
       const errorMessage = getErrorMessage(error);
@@ -52,7 +52,7 @@ export const useFounderStaffStore = create<FounderStaffState>((set, get) => ({
   createStaff: async (data) => {
     set({ isLoading: true, error: null });
     try {
-      await apiService.createFounderStaff(data);
+      await founderApiService.createFounderStaff(data);
       await get().fetchStaff();
       toast.success('Staff member created successfully');
     } catch (error: any) {
@@ -66,7 +66,7 @@ export const useFounderStaffStore = create<FounderStaffState>((set, get) => ({
   updateStaff: async (id, data) => {
     set({ isLoading: true, error: null });
     try {
-      await apiService.updateFounderStaff(id, data);
+      await founderApiService.updateFounderStaff(id, data);
       await get().fetchStaff();
       toast.success('Staff member updated successfully');
     } catch (error: any) {
@@ -80,7 +80,7 @@ export const useFounderStaffStore = create<FounderStaffState>((set, get) => ({
   deleteStaff: async (id) => {
     set({ isLoading: true, error: null });
     try {
-      await apiService.deleteFounderStaff(id);
+      await founderApiService.deleteFounderStaff(id);
       await get().fetchStaff();
       toast.success('Staff member deleted successfully');
     } catch (error: any) {
@@ -94,7 +94,7 @@ export const useFounderStaffStore = create<FounderStaffState>((set, get) => ({
   updatePermissions: async (id, data) => {
     set({ isLoading: true, error: null });
     try {
-      await apiService.updateFounderStaffPermissions(id, data);
+      await founderApiService.updateFounderStaffPermissions(id, data);
       await get().fetchStaffById(id);
       toast.success('Permissions updated successfully');
     } catch (error: any) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { UserPlus, Building, Clock, Users } from 'lucide-react';
 import { useSalesDashboardStore } from '@/stores/sales-dashboard-store';
 import { StatCard } from '@/components/dashboard/stat-card';
@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format } from 'date-fns';
 import { EscalateIssueDialog } from '@/components/shared/escalate-issue-dialog';
 
@@ -43,9 +44,76 @@ function SalesDashboardClient() {
   const { dashboard, onboardingRequests, partners, isLoading, fetchDashboardData, refreshDashboard } =
     useSalesDashboardStore();
 
+  const [onboardingPage, setOnboardingPage] = useState(1);
+  const [partnersPage, setPartnersPage] = useState(1);
+  const itemsPerPage = 10;
+
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
+
+  const renderPagination = (currentPage: number, totalItems: number, onPageChange: (page: number) => void) => {
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+    if (totalItems === 0) return null;
+
+    return (
+      <div className="flex items-center justify-between px-2 py-4">
+        <div className="text-sm text-muted-foreground">
+          Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} items
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </Button>
+          <div className="flex items-center gap-1">
+            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+              return (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => onPageChange(pageNum)}
+                  className="w-8 h-8 p-0"
+                >
+                  {pageNum}
+                </Button>
+              );
+            })}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  const getPaginatedData = <T,>(data: T[], page: number): T[] => {
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return data.slice(startIndex, endIndex);
+  };
 
   if (isLoading && !dashboard) {
     return (
@@ -164,158 +232,176 @@ function SalesDashboardClient() {
         </Card>
       </div>
 
-      {/* Onboarding Pipeline */}
+      {/* Partner Management Tabs */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Onboarding Pipeline</CardTitle>
-            <CardDescription>Current onboarding leads and their status</CardDescription>
+            <CardTitle>Partner Management</CardTitle>
+            <CardDescription>Manage onboarding pipeline and partner engagement</CardDescription>
           </div>
           <Button variant="outline" size="sm" onClick={refreshDashboard}>
             Refresh
           </Button>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Properties</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {onboardingRequests.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
-                    No onboarding requests found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                onboardingRequests.map((request) => (
-                  <TableRow key={request.id}>
-                    <TableCell className="font-mono text-sm">{request.id}</TableCell>
-                    <TableCell className="font-medium">{request.business_name}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="capitalize">
-                        {request.type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{request.properties_count || 0}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          request.status === 'pending'
-                            ? 'secondary'
-                            : request.status === 'completed'
-                            ? 'default'
-                            : 'outline'
-                        }
-                        className="capitalize"
-                      >
-                        {request.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {request.email}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {format(new Date(request.created_at), 'MMM d, yyyy')}
-                    </TableCell>
-                    <TableCell>
-                      <EscalateIssueDialog
-                        issueId={request.id.toString()}
-                        issueType="lead"
-                        fromDepartment="sales"
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+          <Tabs defaultValue="onboarding" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="onboarding">
+                <Clock className="h-4 w-4 mr-2" />
+                Onboarding Pipeline
+              </TabsTrigger>
+              <TabsTrigger value="partners">
+                <Users className="h-4 w-4 mr-2" />
+                Partner Engagement
+              </TabsTrigger>
+            </TabsList>
 
-      {/* Partner Engagement */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Partner Engagement</CardTitle>
-          <CardDescription>Active partners and their activity</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Properties</TableHead>
-                <TableHead>Bookings</TableHead>
-                <TableHead>Revenue</TableHead>
-                <TableHead>KYC Status</TableHead>
-                <TableHead>Last Active</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {partners.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
-                    No partners found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                partners.slice(0, 10).map((partner) => (
-                  <TableRow key={partner.id}>
-                    <TableCell className="font-mono text-sm">{partner.id}</TableCell>
-                    <TableCell className="font-medium">{partner.business_name}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="capitalize">
-                        {partner.type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{partner.properties_count}</TableCell>
-                    <TableCell>{partner.total_bookings}</TableCell>
-                    <TableCell className="font-medium">
-                      ₦{partner.total_revenue.toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          partner.user?.kyc_status === 'approved'
-                            ? 'default'
-                            : partner.user?.kyc_status === 'pending'
-                            ? 'secondary'
-                            : 'destructive'
-                        }
-                        className="capitalize"
-                      >
-                        {partner.user?.kyc_status || 'unknown'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {partner.last_active_at
-                        ? format(new Date(partner.last_active_at), 'MMM d, yyyy')
-                        : 'Never'}
-                    </TableCell>
-                    <TableCell>
-                      <EscalateIssueDialog
-                        issueId={partner.id.toString()}
-                        issueType="general"
-                        fromDepartment="sales"
-                      />
-                    </TableCell>
+            {/* Onboarding Pipeline Tab */}
+            <TabsContent value="onboarding" className="mt-4">
+              <div className="mb-2">
+                <p className="text-sm text-muted-foreground">Current onboarding leads and their status</p>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Properties</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                </TableHeader>
+                <TableBody>
+                  {getPaginatedData(onboardingRequests, onboardingPage).length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                        No onboarding requests found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    getPaginatedData(onboardingRequests, onboardingPage).map((request) => (
+                      <TableRow key={request.id}>
+                        <TableCell className="font-mono text-sm">{request.id}</TableCell>
+                        <TableCell className="font-medium">{request.business_name}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="capitalize">
+                            {request.type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{request.properties_count || 0}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              request.status === 'pending'
+                                ? 'secondary'
+                                : request.status === 'completed'
+                                ? 'default'
+                                : 'outline'
+                            }
+                            className="capitalize"
+                          >
+                            {request.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {request.email}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {format(new Date(request.created_at), 'MMM d, yyyy')}
+                        </TableCell>
+                        <TableCell>
+                          <EscalateIssueDialog
+                            issueId={request.id.toString()}
+                            issueType="lead"
+                            fromDepartment="sales"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+              {renderPagination(onboardingPage, onboardingRequests.length, setOnboardingPage)}
+            </TabsContent>
+
+            {/* Partner Engagement Tab */}
+            <TabsContent value="partners" className="mt-4">
+              <div className="mb-2">
+                <p className="text-sm text-muted-foreground">Active partners and their activity</p>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Properties</TableHead>
+                    <TableHead>Bookings</TableHead>
+                    <TableHead>Revenue</TableHead>
+                    <TableHead>KYC Status</TableHead>
+                    <TableHead>Last Active</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {getPaginatedData(partners, partnersPage).length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
+                        No partners found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    getPaginatedData(partners, partnersPage).map((partner) => (
+                      <TableRow key={partner.id}>
+                        <TableCell className="font-mono text-sm">{partner.id}</TableCell>
+                        <TableCell className="font-medium">{partner.business_name}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="capitalize">
+                            {partner.type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{partner.properties_count}</TableCell>
+                        <TableCell>{partner.total_bookings}</TableCell>
+                        <TableCell className="font-medium">
+                          ₦{partner.total_revenue.toLocaleString()}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              partner.user?.kyc_status === 'approved'
+                                ? 'default'
+                                : partner.user?.kyc_status === 'pending'
+                                ? 'secondary'
+                                : 'destructive'
+                            }
+                            className="capitalize"
+                          >
+                            {partner.user?.kyc_status || 'unknown'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {partner.last_active_at
+                            ? format(new Date(partner.last_active_at), 'MMM d, yyyy')
+                            : 'Never'}
+                        </TableCell>
+                        <TableCell>
+                          <EscalateIssueDialog
+                            issueId={partner.id.toString()}
+                            issueType="general"
+                            fromDepartment="sales"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+              {renderPagination(partnersPage, partners.length, setPartnersPage)}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>
